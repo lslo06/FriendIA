@@ -75,3 +75,7 @@ pnpm run preview
 3. Chat real mediante Supabase Edge Function.
 4. Diario emocional persistente.
 5. Dashboard con estadisticas reales.
+
+
+
+## el que lea esto es gay
