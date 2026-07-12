@@ -10,8 +10,9 @@ import { Help } from "./components/Help";
 import { Profile } from "./components/Profile";
 import { AppSettings } from "./components/AppSettings";
 import { EmergencyModal } from "./components/EmergencyModal";
+import { ConsultorioPage } from "./components/ConsultorioPage";
 
-type AppScreen = "landing" | "auth" | "survey" | "app";
+type AppScreen = "landing" | "auth" | "survey" | "app" | "consultorio";
 type AppTab = "dashboard" | "diary" | "chat" | "help" | "profile" | "settings";
 
 export default function App() {
@@ -64,6 +65,17 @@ export default function App() {
   if (screen === "landing") {
     return (
       <Landing
+        onLogin={() => { setAuthMode("login"); setScreen("auth"); }}
+        onSignup={() => { setAuthMode("signup"); setScreen("auth"); }}
+        onConsultorio={() => setScreen("consultorio")}
+      />
+    );
+  }
+
+  if (screen === "consultorio") {
+    return (
+      <ConsultorioPage
+        onBack={() => setScreen("landing")}
         onLogin={() => { setAuthMode("login"); setScreen("auth"); }}
         onSignup={() => { setAuthMode("signup"); setScreen("auth"); }}
       />

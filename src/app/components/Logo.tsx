@@ -1,4 +1,4 @@
-import logoImg from "figma:asset/01c21fb0-9201-45ea-a054-5ec5bdc2f330.png";
+import logoImg from "@/assets/logo.png";
 
 interface LogoProps {
   size?: number;
