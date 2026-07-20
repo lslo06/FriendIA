@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { getDisplayName, saveSurveyProfile } from "@/lib/profiles";
 import { Landing } from "./components/Landing";
-import { Auth } from "./components/Auth";
+import { Auth, type AuthResult } from "./components/Auth";
 import { Survey, type SurveyData } from "./components/Survey";
 import { Sidebar } from "./components/Sidebar";
 import { Dashboard } from "./components/Dashboard";
@@ -16,34 +20,56 @@ type AppScreen = "landing" | "auth" | "survey" | "app" | "consultorio";
 type AppTab = "dashboard" | "diary" | "chat" | "help" | "profile" | "settings";
 
 export default function App() {
+  const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const [screen, setScreen] = useState<AppScreen>("landing");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [userName, setUserName] = useState("Sofía");
   const [activeTab, setActiveTab] = useState<AppTab>("dashboard");
   const [showEmergency, setShowEmergency] = useState(false);
 
-  function handleLogin(name: string) {
-    setUserName(name);
-    setScreen("app");
-    setActiveTab("dashboard");
+  const userName = getDisplayName(profile, user?.email);
+
+  useEffect(() => {
+    if (loading || !user) return;
+    if (profile?.survey_completed && (screen === "landing" || screen === "auth")) {
+      setScreen("app");
+    } else if (!profile?.survey_completed && (screen === "landing" || screen === "auth")) {
+      setScreen("survey");
+    }
+  }, [user, profile, loading, screen]);
+
+  function handleAuthSuccess(result: AuthResult) {
+    setScreen(result.surveyCompleted ? "app" : "survey");
   }
 
-  function handleSignup(name: string) {
-    setUserName(name);
-    setScreen("survey");
+  async function handleSurveyComplete(data: SurveyData) {
+    if (!user) return;
+    try {
+      await saveSurveyProfile(user.id, data);
+      await refreshProfile();
+      setScreen("app");
+      setActiveTab("dashboard");
+      toast.success("¡Perfil configurado! Bienvenido/a a FriendIA");
+    } catch (error) {
+      console.error("Error guardando encuesta:", error);
+      const message = error instanceof Error ? error.message : "No se pudo guardar tu perfil";
+      toast.error(message);
+    }
   }
 
-  function handleSurveyComplete(data: SurveyData) {
-    setUserName(data.name || userName);
-    setScreen("app");
+  async function handleLogout() {
+    await signOut();
+    setScreen("landing");
     setActiveTab("dashboard");
   }
 
   function renderTab() {
+    if (!user) return null;
+
     switch (activeTab) {
       case "dashboard":
         return (
           <Dashboard
+            userId={user.id}
             userName={userName}
             onOpenChat={() => setActiveTab("chat")}
             onOpenDiary={() => setActiveTab("diary")}
@@ -52,14 +78,34 @@ export default function App() {
       case "chat":
         return <Chat userName={userName} onEmergency={() => setShowEmergency(true)} />;
       case "diary":
-        return <Diary />;
+        return <Diary userId={user.id} />;
       case "help":
         return <Help />;
       case "profile":
-        return <Profile userName={userName} />;
+        return (
+          <Profile
+            userId={user.id}
+            userName={userName}
+            email={user.email ?? ""}
+            onProfileUpdate={refreshProfile}
+          />
+        );
       case "settings":
-        return <AppSettings />;
+        return (
+          <AppSettings
+            userId={user.id}
+            onLogout={handleLogout}
+          />
+        );
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#121820" }}>
+        <Loader2 size={32} color="#5B88B2" className="animate-spin" />
+      </div>
+    );
   }
 
   if (screen === "landing") {
@@ -86,7 +132,7 @@ export default function App() {
     return (
       <Auth
         initialMode={authMode}
-        onSuccess={authMode === "login" ? handleLogin : handleSignup}
+        onSuccess={handleAuthSuccess}
         onBack={() => setScreen("landing")}
       />
     );
@@ -96,13 +142,12 @@ export default function App() {
     return <Survey userName={userName} onComplete={handleSurveyComplete} />;
   }
 
-  // App layout
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#121820" }}>
       <Sidebar
         active={activeTab}
         onNavigate={tab => setActiveTab(tab)}
-        onLogout={() => setScreen("landing")}
+        onLogout={handleLogout}
       />
       <main className="flex-1 flex flex-col overflow-hidden">
         {renderTab()}
