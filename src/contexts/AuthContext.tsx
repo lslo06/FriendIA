@@ -9,16 +9,23 @@ import {
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { ensureProfile } from "@/lib/profiles";
-import { fetchSettings } from "@/lib/settings";
-import type { UserProfile } from "@/lib/types";
+import {
+  applySettings,
+  fetchSettings,
+  saveSettings,
+  type SettingsUpdates,
+} from "@/lib/settings";
+import type { UserProfile, UserSettings } from "@/lib/types";
 
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
   profile: UserProfile | null;
+  settings: UserSettings | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateSettings: (updates: SettingsUpdates) => Promise<UserSettings>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -26,6 +33,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadUserData = useCallback(async (authUser: User) => {
@@ -35,25 +43,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         : typeof authUser.user_metadata?.name === "string"
           ? authUser.user_metadata.name
           : null;
+    const metadataAvatar =
+      typeof authUser.user_metadata?.avatar_url === "string"
+        ? authUser.user_metadata.avatar_url
+        : typeof authUser.user_metadata?.picture === "string"
+          ? authUser.user_metadata.picture
+          : null;
 
-    const [profileResult] = await Promise.allSettled([
-      ensureProfile(authUser.id, {
+    try {
+      const loadedProfile = await ensureProfile(authUser.id, {
         email: authUser.email,
         fullName: metadataName,
-      }),
-      fetchSettings(authUser.id),
-    ] as const);
-
-    if (profileResult.status === "fulfilled") {
-      setProfile(profileResult.value);
-    } else {
+        avatarUrl: metadataAvatar,
+      });
+      setProfile(loadedProfile);
+    } catch (error) {
+      console.error("Error cargando el perfil:", error);
       setProfile(null);
+      setSettings(null);
+      return;
+    }
+
+    try {
+      setSettings(await fetchSettings(authUser.id));
+    } catch (error) {
+      console.error("Error cargando la configuración:", error);
+      setSettings(null);
     }
   }, []);
 
   const refreshProfile = useCallback(async () => {
     if (session?.user) await loadUserData(session.user);
   }, [session?.user, loadUserData]);
+
+  const updateSettings = useCallback(async (updates: SettingsUpdates) => {
+    const user = session?.user;
+    if (!user) throw new Error("No hay una sesión activa");
+
+    const previousSettings = settings;
+    if (previousSettings) {
+      setSettings({ ...previousSettings, ...updates });
+    }
+
+    try {
+      const savedSettings = await saveSettings(user.id, updates);
+      setSettings(savedSettings);
+      return savedSettings;
+    } catch (error) {
+      setSettings(previousSettings);
+      throw error;
+    }
+  }, [session?.user, settings]);
+
+  useEffect(() => {
+    applySettings(settings);
+  }, [settings]);
 
   useEffect(() => {
     let active = true;
@@ -69,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadUserData(s.user);
       } else {
         setProfile(null);
+        setSettings(null);
       }
     }
 
@@ -81,7 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!active) return;
         setSession(s);
         if (s?.user) await loadUserData(s.user);
-        else setProfile(null);
+        else {
+          setProfile(null);
+          setSettings(null);
+        }
       }
     );
 
@@ -95,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    setSettings(null);
   }
 
   return (
@@ -103,9 +152,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         session,
         profile,
+        settings,
         loading,
         signOut,
         refreshProfile,
+        updateSettings,
       }}
     >
       {children}

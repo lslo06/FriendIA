@@ -2,7 +2,11 @@ import { supabase } from "./supabase";
 import { getProfileId } from "./profiles";
 import type { UserSettings } from "./types";
 
-const LOCAL_KEY = "friendia_settings";
+const LOCAL_KEY_PREFIX = "friendia_settings";
+
+export type SettingsUpdates = Partial<
+  Omit<UserSettings, "id_configuracion_usuario" | "id_perfil" | "actualizado_en">
+>;
 
 export const DEFAULT_SETTINGS: Omit<UserSettings, "id_configuracion_usuario" | "id_perfil" | "actualizado_en"> = {
   modo_oscuro: false,
@@ -13,8 +17,43 @@ export const DEFAULT_SETTINGS: Omit<UserSettings, "id_configuracion_usuario" | "
   idioma: "es",
 };
 
-function cacheSettings(settings: UserSettings): void {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(settings));
+export function normalizeFontSize(value: number): number {
+  if (value === 0) return 13;
+  if (value === 1) return 14;
+  if (value === 2) return 16;
+  if (!Number.isFinite(value)) return DEFAULT_SETTINGS.tamano_fuente;
+  return Math.min(20, Math.max(12, value));
+}
+
+function normalizeSettings(settings: UserSettings): UserSettings {
+  return {
+    ...settings,
+    modo_oscuro: Boolean(settings.modo_oscuro),
+    tamano_fuente: normalizeFontSize(settings.tamano_fuente),
+    registro_diario_activo: Boolean(settings.registro_diario_activo),
+    hora_registro: settings.hora_registro?.slice(0, 5) || "20:00",
+    guardar_historial_chat: Boolean(settings.guardar_historial_chat),
+    idioma: settings.idioma || "es",
+  };
+}
+
+function cacheSettings(userId: string, settings: UserSettings): void {
+  localStorage.setItem(`${LOCAL_KEY_PREFIX}:${userId}`, JSON.stringify(settings));
+}
+
+export function applySettings(settings: UserSettings | null): void {
+  const darkMode = settings?.modo_oscuro ?? true;
+  const fontSize = normalizeFontSize(
+    settings?.tamano_fuente ?? DEFAULT_SETTINGS.tamano_fuente
+  );
+  const fontScale = fontSize / DEFAULT_SETTINGS.tamano_fuente;
+  const root = document.documentElement;
+
+  root.dataset.friendiaTheme = darkMode ? "dark" : "light";
+  root.classList.toggle("dark", darkMode);
+  root.style.colorScheme = darkMode ? "dark" : "light";
+  root.style.setProperty("--app-font-scale", fontScale.toFixed(3));
+  root.style.setProperty("--font-size", `${16 * fontScale}px`);
 }
 
 export async function fetchSettings(userId: string): Promise<UserSettings> {
@@ -31,8 +70,9 @@ export async function fetchSettings(userId: string): Promise<UserSettings> {
   if (error) throw error;
 
   if (data) {
-    cacheSettings(data);
-    return data;
+    const settings = normalizeSettings(data as UserSettings);
+    cacheSettings(userId, settings);
+    return settings;
   }
 
   const { data: created, error: createError } = await supabase
@@ -51,13 +91,14 @@ export async function fetchSettings(userId: string): Promise<UserSettings> {
     .single();
 
   if (createError) throw createError;
-  cacheSettings(created);
-  return created;
+  const settings = normalizeSettings(created as UserSettings);
+  cacheSettings(userId, settings);
+  return settings;
 }
 
 export async function saveSettings(
   userId: string,
-  updates: Partial<Omit<UserSettings, "id_configuracion_usuario" | "id_perfil" | "actualizado_en">>
+  updates: SettingsUpdates
 ): Promise<UserSettings> {
   const profileId = await getProfileId(userId);
   if (!profileId) throw new Error("Perfil no encontrado");
@@ -77,8 +118,9 @@ export async function saveSettings(
     .single();
 
   if (error) throw error;
-  cacheSettings(data);
-  return data;
+  const settings = normalizeSettings(data as UserSettings);
+  cacheSettings(userId, settings);
+  return settings;
 }
 
 export async function deleteChatHistory(userId: string): Promise<void> {
@@ -86,6 +128,7 @@ export async function deleteChatHistory(userId: string): Promise<void> {
   if (!profileId) return;
 
   const { data: sessions, error: sessionsError } = await supabase
+    .schema("Group_By")
     .from("sesiones_chat")
     .select("id_sesion_chat")
     .eq("id_perfil", profileId);
@@ -96,6 +139,7 @@ export async function deleteChatHistory(userId: string): Promise<void> {
   if (sessionIds.length === 0) return;
 
   const { error } = await supabase
+    .schema("Group_By")
     .from("mensajes_chat")
     .delete()
     .in("id_sesion_chat", sessionIds);

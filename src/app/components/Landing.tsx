@@ -292,6 +292,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
 
           {/* CTAs */}
           <div className="flex gap-4 justify-center mb-16">
+            
             <a
               href="mailto:alexiscvlldgo@gmail.com"
               className="flex items-center gap-2 px-8 py-4 rounded-xl transition-all"

@@ -24,7 +24,7 @@ const bottomNav = [
 export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
   return (
     <aside
-      style={{ width: 220, minWidth: 220, background: "#1A2332", borderRight: "1px solid rgba(255,255,255,0.06)" }}
+      style={{ width: 220, minWidth: 220, background: "var(--app-surface)", borderRight: "1px solid var(--app-border)" }}
       className="flex flex-col h-full py-6 px-3"
     >
       <div className="px-3 mb-8">
@@ -41,23 +41,23 @@ export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left transition-all duration-150"
               style={{
                 background: isActive ? "rgba(91,136,178,0.18)" : "transparent",
-                color: isActive ? "#5B88B2" : "#94A3B8",
+                color: isActive ? "#5B88B2" : "var(--app-text-muted)",
               }}
               onMouseEnter={e => {
-                if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                if (!isActive) (e.currentTarget as HTMLElement).style.background = "var(--app-border-subtle)";
               }}
               onMouseLeave={e => {
                 if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
               }}
             >
               <Icon size={18} />
-              <span style={{ fontSize: 14, fontWeight: isActive ? 600 : 400 }}>{label}</span>
+              <span style={{ fontSize: "calc(14px * var(--app-font-scale))", fontWeight: isActive ? 600 : 400 }}>{label}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className="flex flex-col gap-1 mt-4 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="flex flex-col gap-1 mt-4 pt-4" style={{ borderTop: "1px solid var(--app-border)" }}>
         {bottomNav.map(({ id, label, icon: Icon }) => {
           const isActive = active === id;
           return (
@@ -67,29 +67,29 @@ export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left transition-all"
               style={{
                 background: isActive ? "rgba(91,136,178,0.18)" : "transparent",
-                color: isActive ? "#5B88B2" : "#94A3B8",
+                color: isActive ? "#5B88B2" : "var(--app-text-muted)",
               }}
               onMouseEnter={e => {
-                if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                if (!isActive) (e.currentTarget as HTMLElement).style.background = "var(--app-border-subtle)";
               }}
               onMouseLeave={e => {
                 if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
               }}
             >
               <Icon size={18} />
-              <span style={{ fontSize: 14 }}>{label}</span>
+              <span style={{ fontSize: "calc(14px * var(--app-font-scale))" }}>{label}</span>
             </button>
           );
         })}
         <button
           onClick={onLogout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left transition-all"
-          style={{ color: "#94A3B8" }}
-          onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)")}
+          style={{ color: "var(--app-text-muted)" }}
+          onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--app-border-subtle)")}
           onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
         >
           <LogOut size={18} />
-          <span style={{ fontSize: 14 }}>Cerrar sesión</span>
+          <span style={{ fontSize: "calc(14px * var(--app-font-scale))" }}>Cerrar sesión</span>
         </button>
       </div>
     </aside>

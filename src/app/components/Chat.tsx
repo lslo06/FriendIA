@@ -115,24 +115,24 @@ export function Chat({ userName, onEmergency }: ChatProps) {
   const gt = groundingTechniques[groundingIdx];
 
   return (
-    <div className="flex-1 flex flex-col" style={{ background: "#121820", overflow: "hidden" }}>
+    <div className="flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "#1A2332" }}>
+      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "rgba(91,136,178,0.2)" }}>
             <img src={logoImg} alt="bot" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} />
           </div>
           <div>
-            <p style={{ fontSize: 15, fontWeight: 600, color: "#E2E8F0" }}>Tu Guía Emocional</p>
+            <p style={{ fontSize: "calc(15px * var(--app-font-scale))", fontWeight: 600, color: "var(--app-text)" }}>Tu Guía Emocional</p>
             <div className="flex items-center gap-1.5">
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#4CD964" }} />
-              <span style={{ fontSize: 12, color: "#94A3B8" }}>Disponible · No diagnóstica, no terapéutica</span>
+              <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)" }}>Disponible · No diagnóstica, no terapéutica</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2" style={{ color: sessionMin >= SESSION_WARN_MIN ? "#F5A623" : "#94A3B8" }}>
+        <div className="flex items-center gap-2" style={{ color: sessionMin >= SESSION_WARN_MIN ? "#F5A623" : "var(--app-text-muted)" }}>
           <Clock size={14} />
-          <span style={{ fontSize: 12 }}>Sesión de hoy: {sessionMin} min</span>
+          <span style={{ fontSize: "calc(12px * var(--app-font-scale))" }}>Sesión de hoy: {sessionMin} min</span>
         </div>
       </div>
 
@@ -141,12 +141,12 @@ export function Chat({ userName, onEmergency }: ChatProps) {
         <div className="mx-6 mt-4 p-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.3)" }}>
           <Clock size={15} color="#F5A623" style={{ flexShrink: 0, marginTop: 1 }} />
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 13, color: "#E2E8F0", fontWeight: 600, marginBottom: 2 }}>Llevas {sessionMin} minutos aquí</p>
-            <p style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.5 }}>
+            <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text)", fontWeight: 600, marginBottom: 2 }}>Llevas {sessionMin} minutos aquí</p>
+            <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", lineHeight: 1.5 }}>
               Está bien hacer una pausa. Las personas cercanas a ti también pueden ser un gran apoyo. ¿Hay alguien de confianza con quien puedas hablar hoy?
             </p>
           </div>
-          <button onClick={() => setShowOveruseWarning(false)} style={{ fontSize: 18, color: "#94A3B8", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>×</button>
+          <button onClick={() => setShowOveruseWarning(false)} style={{ fontSize: "calc(18px * var(--app-font-scale))", color: "var(--app-text-muted)", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
       )}
 
@@ -166,22 +166,22 @@ export function Chat({ userName, onEmergency }: ChatProps) {
                       ? "rgba(76,217,100,0.1)"
                       : isBot ? "rgba(91,136,178,0.15)" : "#5B88B2",
                     border: isGrounding ? "1px solid rgba(76,217,100,0.25)" : "none",
-                    color: "#E2E8F0",
+                    color: "var(--app-text)",
                     borderTopLeftRadius: isBot ? 4 : 16,
                     borderTopRightRadius: !isBot ? 4 : 16,
-                    fontSize: 14,
+                    fontSize: "calc(14px * var(--app-font-scale))",
                     lineHeight: 1.6,
                   }}
                 >
                   {isGrounding && (
                     <div className="flex items-center gap-1.5 mb-1">
                       <Wind size={12} color="#4CD964" />
-                      <span style={{ fontSize: 11, color: "#4CD964", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Técnica de regulación</span>
+                      <span style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "#4CD964", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Técnica de regulación</span>
                     </div>
                   )}
                   {msg.text}
                 </div>
-                <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 4, textAlign: !isBot ? "right" : "left" }}>{msg.time}</p>
+                <p style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-text-muted)", marginTop: 4, textAlign: !isBot ? "right" : "left" }}>{msg.time}</p>
               </div>
             </div>
           );
@@ -189,12 +189,12 @@ export function Chat({ userName, onEmergency }: ChatProps) {
 
         {/* Grounding card */}
         {showGrounding && (
-          <div className="p-4 rounded-2xl" style={{ background: "#1A2332", border: "1px solid rgba(76,217,100,0.25)" }}>
+          <div className="p-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid rgba(76,217,100,0.25)" }}>
             <div className="flex items-center gap-2 mb-2">
               <Anchor size={14} color="#4CD964" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#4CD964" }}>{gt.title} {gt.icon}</span>
+              <span style={{ fontSize: "calc(13px * var(--app-font-scale))", fontWeight: 600, color: "#4CD964" }}>{gt.title} {gt.icon}</span>
             </div>
-            <p style={{ fontSize: 13, color: "#94A3B8", lineHeight: 1.6, marginBottom: 12 }}>{gt.desc}</p>
+            <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", lineHeight: 1.6, marginBottom: 12 }}>{gt.desc}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => {
@@ -203,11 +203,11 @@ export function Chat({ userName, onEmergency }: ChatProps) {
                   setMessages(m => [...m, resumeMsg]);
                 }}
                 className="px-4 py-2 rounded-xl text-sm transition-all"
-                style={{ background: "#4CD964", color: "#121820", fontWeight: 600 }}
+                style={{ background: "#4CD964", color: "var(--app-bg)", fontWeight: 600 }}
               >Lo intentaré</button>
               <button
                 onClick={() => setShowGrounding(false)}
-                style={{ fontSize: 13, color: "#94A3B8", background: "none", border: "none", cursor: "pointer" }}
+                style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", background: "none", border: "none", cursor: "pointer" }}
               >Prefiero continuar</button>
             </div>
           </div>
@@ -219,30 +219,30 @@ export function Chat({ userName, onEmergency }: ChatProps) {
       {/* Emergency card */}
       <div className="mx-6 mb-3 p-3 rounded-xl flex items-center gap-3" style={{ background: "rgba(226,75,74,0.06)", border: "1px solid rgba(226,75,74,0.2)" }}>
         <AlertTriangle size={14} color="#E24B4A" />
-        <p style={{ fontSize: 12, color: "#94A3B8", flex: 1 }}>Si estás en crisis, contacta ayuda profesional.</p>
-        <button onClick={onEmergency} style={{ fontSize: 12, color: "#E24B4A", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Ver opciones</button>
+        <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", flex: 1 }}>Si estás en crisis, contacta ayuda profesional.</p>
+        <button onClick={onEmergency} style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "#E24B4A", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Ver opciones</button>
       </div>
 
       {/* Input */}
       <div className="px-6 pb-5">
-        <div className="flex items-center gap-3 p-2 pl-4 rounded-2xl" style={{ background: "#1A2332", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center gap-3 p-2 pl-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && sendMessage()}
             placeholder="Escribe cómo te sientes..."
             className="flex-1 outline-none bg-transparent"
-            style={{ fontSize: 14, color: "#E2E8F0" }}
+            style={{ fontSize: "calc(14px * var(--app-font-scale))", color: "var(--app-text)" }}
           />
           <button
             onClick={sendMessage}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
-            style={{ background: input.trim() ? "#5B88B2" : "#1E2D42" }}
+            style={{ background: input.trim() ? "#5B88B2" : "var(--app-muted)" }}
           >
-            <Send size={16} color={input.trim() ? "#fff" : "#94A3B8"} />
+            <Send size={16} color={input.trim() ? "#fff" : "var(--app-text-muted)"} />
           </button>
         </div>
-        <p style={{ fontSize: 11, color: "#2D3F55", textAlign: "center", marginTop: 8 }}>
+        <p style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-muted-strong)", textAlign: "center", marginTop: 8 }}>
           FriendIA no diagnostica ni reemplaza la atención psicológica profesional.
         </p>
       </div>

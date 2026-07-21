@@ -3,6 +3,8 @@ import type { Session } from "@supabase/supabase-js";
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { savePersonalDetails, type PersonalDetails } from "@/lib/profiles";
+import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
 
 export interface AuthResult {
@@ -17,12 +19,82 @@ interface AuthProps {
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const PASSWORD_SETUP_ACTION = "create-password";
+const PASSWORD_SETUP_STORAGE_KEY = "friendia:auth_action";
+const PENDING_PROFILE_STORAGE_KEY = "friendia:pending_profile";
+
+interface PendingProfile extends PersonalDetails {
+  email: string;
+}
+
+function savePendingProfile(profile: PendingProfile) {
+  window.sessionStorage.setItem(
+    PENDING_PROFILE_STORAGE_KEY,
+    JSON.stringify(profile)
+  );
+}
+
+function readPendingProfile(): PendingProfile | null {
+  const stored = window.sessionStorage.getItem(PENDING_PROFILE_STORAGE_KEY);
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored) as Partial<PendingProfile>;
+    if (
+      typeof parsed.email !== "string" ||
+      typeof parsed.nombre !== "string" ||
+      typeof parsed.apellido_pat !== "string" ||
+      typeof parsed.apellido_mat !== "string"
+    ) {
+      throw new Error("Formato inválido");
+    }
+
+    return {
+      email: parsed.email.trim().toLowerCase(),
+      nombre: parsed.nombre.trim(),
+      apellido_pat: parsed.apellido_pat.trim(),
+      apellido_mat: parsed.apellido_mat.trim(),
+    };
+  } catch {
+    window.sessionStorage.removeItem(PENDING_PROFILE_STORAGE_KEY);
+    return null;
+  }
+}
+
+function clearPendingProfile() {
+  window.sessionStorage.removeItem(PENDING_PROFILE_STORAGE_KEY);
+}
+
+function isPasswordSetupFlow() {
+  return (
+    new URLSearchParams(window.location.search).get("auth_action") ===
+      PASSWORD_SETUP_ACTION ||
+    window.sessionStorage.getItem(PASSWORD_SETUP_STORAGE_KEY) ===
+      PASSWORD_SETUP_ACTION
+  );
+}
+
+function passwordSetupRedirectUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("auth_action", PASSWORD_SETUP_ACTION);
+  url.hash = "";
+  return url.toString();
+}
+
+function clearPasswordSetupUrl() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("auth_action");
+  url.hash = "";
+  window.sessionStorage.removeItem(PASSWORD_SETUP_STORAGE_KEY);
+  window.history.replaceState({}, "", `${url.pathname}${url.search}`);
+}
 
 export function Auth({
   onSuccess,
   onBack,
   initialMode = "login",
 }: AuthProps) {
+  const { refreshProfile } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [showPass, setShowPass] = useState(false);
 
@@ -31,22 +103,63 @@ export function Auth({
   const [apellidoMat, setApellidoMat] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [signupStep, setSignupStep] = useState<"details" | "password">(
+    "details"
+  );
 
-  const [googleCompletarPerfil, setGoogleCompletarPerfil] = useState(false);
-  const [googleNombre, setGoogleNombre] = useState("");
-  const [googleApellidoPat, setGoogleApellidoPat] = useState("");
-  const [googleApellidoMat, setGoogleApellidoMat] = useState("");
+  const [googleEmailConflict, setGoogleEmailConflict] = useState(false);
+  const [passwordSetupMode, setPasswordSetupMode] = useState(
+    isPasswordSetupFlow
+  );
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const googleProcesado = useRef(false);
 
-  async function procesarSesionGoogle(session: Session) {
+  async function persistPendingProfile(session: Session) {
+    const pending = readPendingProfile();
+    if (!pending) return;
+
+    const authenticatedEmail = session.user.email?.trim().toLowerCase();
+    if (!authenticatedEmail || authenticatedEmail !== pending.email) {
+      clearPendingProfile();
+      return;
+    }
+
+    const { updated } = await savePersonalDetails(session.user.id, pending);
+
+    if (updated) {
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: {
+          ...session.user.user_metadata,
+          nombre: pending.nombre,
+          apellido_pat: pending.apellido_pat,
+          apellido_mat: pending.apellido_mat,
+          full_name: `${pending.nombre} ${pending.apellido_pat} ${pending.apellido_mat}`,
+        },
+      });
+
+      if (metadataError) throw metadataError;
+    }
+
+    await refreshProfile();
+    clearPendingProfile();
+  }
+
+  async function procesarSesionGoogle(session: Session, force = false) {
     if (googleProcesado.current) return;
 
     const provider = session.user.app_metadata?.provider;
-    if (provider !== "google") return;
+    const providers = Array.isArray(session.user.app_metadata?.providers)
+      ? session.user.app_metadata.providers
+      : [];
+    if (!force && provider !== "google" && !providers.includes("google")) {
+      return;
+    }
 
     googleProcesado.current = true;
 
@@ -71,12 +184,6 @@ export function Auth({
         session.user.email?.split("@")[0] ||
         "Usuario";
 
-      if (result.needsLastNames) {
-        setGoogleNombre(nombre);
-        setGoogleCompletarPerfil(true);
-        return;
-      }
-
       onSuccess({
         userName: nombre,
         surveyCompleted: result.survey_completed ?? false,
@@ -97,7 +204,17 @@ export function Auth({
       } = await supabase.auth.getSession();
 
       if (session) {
+        if (isPasswordSetupFlow()) {
+          setPasswordSetupMode(true);
+          setEmail(session.user.email ?? "");
+          return;
+        }
+
         await procesarSesionGoogle(session);
+      } else if (isPasswordSetupFlow()) {
+        clearPasswordSetupUrl();
+        setPasswordSetupMode(false);
+        setError("No se completó la verificación con Google");
       }
     }
 
@@ -108,6 +225,12 @@ export function Auth({
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         setTimeout(() => {
+          if (isPasswordSetupFlow()) {
+            setPasswordSetupMode(true);
+            setEmail(session.user.email ?? "");
+            return;
+          }
+
           procesarSesionGoogle(session);
         }, 0);
       }
@@ -144,17 +267,67 @@ export function Auth({
     }
   }
 
-  async function handleGuardarApellidosGoogle() {
+  async function handleGooglePasswordSetup() {
     try {
       setError("");
       setLoading(true);
+      googleProcesado.current = false;
 
-      if (!googleApellidoPat.trim()) {
-        throw new Error("Ingresa tu apellido paterno");
+      if (
+        mode === "signup" &&
+        name.trim() &&
+        apellidoPat.trim() &&
+        apellidoMat.trim() &&
+        email.trim()
+      ) {
+        savePendingProfile({
+          email: email.trim().toLowerCase(),
+          nombre: name.trim(),
+          apellido_pat: apellidoPat.trim(),
+          apellido_mat: apellidoMat.trim(),
+        });
       }
 
-      if (!googleApellidoMat.trim()) {
-        throw new Error("Ingresa tu apellido materno");
+      window.sessionStorage.setItem(
+        PASSWORD_SETUP_STORAGE_KEY,
+        PASSWORD_SETUP_ACTION
+      );
+
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: passwordSetupRedirectUrl(),
+          queryParams: email.trim()
+            ? { login_hint: email.trim() }
+            : undefined,
+        },
+      });
+
+      if (oauthError) throw oauthError;
+    } catch (err) {
+      window.sessionStorage.removeItem(PASSWORD_SETUP_STORAGE_KEY);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "No se pudo verificar la cuenta con Google";
+      setError(message);
+      toast.error(message);
+      setLoading(false);
+    }
+  }
+
+  async function handleCreatePassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      if (newPassword.length < 8) {
+        throw new Error("La nueva contraseña debe tener al menos 8 caracteres");
+      }
+
+      if (newPassword !== confirmPassword) {
+        throw new Error("Las contraseñas no coinciden");
       }
 
       const {
@@ -162,40 +335,63 @@ export function Auth({
       } = await supabase.auth.getSession();
 
       if (!session) {
-        throw new Error("No se encontró una sesión activa");
+        throw new Error("Vuelve a verificar tu cuenta con Google");
       }
 
-      const response = await fetch(
-        `${API_URL}/api/perfiles/google-completar`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            apellido_pat: googleApellidoPat.trim(),
-            apellido_mat: googleApellidoMat.trim(),
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "No se pudo completar el perfil");
-      }
-
-      toast.success("Perfil completado correctamente");
-
-      onSuccess({
-        userName: result.user?.nombre || googleNombre || "Usuario",
-        surveyCompleted: result.user?.survey_completed ?? false,
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+        data: {
+          ...session.user.user_metadata,
+          password_enabled: true,
+        },
       });
+
+      if (updateError) throw updateError;
+
+      await persistPendingProfile(session);
+
+      clearPasswordSetupUrl();
+      setPasswordSetupMode(false);
+      setGoogleEmailConflict(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("Contraseña creada. Ya puedes usar ambos métodos.");
+
+      googleProcesado.current = false;
+      await procesarSesionGoogle(session, true);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Ocurrió un error";
+        err instanceof Error ? err.message : "No se pudo crear la contraseña";
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
+  async function handleContinueWithGoogleOnly() {
+    setError("");
+    setLoading(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("Vuelve a verificar tu cuenta con Google");
+      }
+
+      await persistPendingProfile(session);
+      clearPasswordSetupUrl();
+      setPasswordSetupMode(false);
+      googleProcesado.current = false;
+      await procesarSesionGoogle(session, true);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "No se pudieron guardar los datos del perfil";
       setError(message);
       toast.error(message);
     } finally {
@@ -213,33 +409,49 @@ export function Auth({
       throw new Error("La contraseña debe tener al menos 6 caracteres");
     }
 
-    const response = await fetch(`${API_URL}/api/perfiles/registro`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        nombre: name.trim(),
-        apellido_pat: apellidoPat.trim(),
-        apellido_mat: apellidoMat.trim(),
-        email: email.trim(),
-        password,
-      }),
-    });
+    let response: Response;
+
+    try {
+      response = await fetch(`${API_URL}/api/perfiles/registro`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre: name.trim(),
+          apellido_pat: apellidoPat.trim(),
+          apellido_mat: apellidoMat.trim(),
+          email: email.trim(),
+          password,
+        }),
+      });
+    } catch {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica que el backend esté encendido."
+      );
+    }
 
     const result = await response.json();
 
     if (!response.ok) {
+      setSignupStep("details");
+      setPassword("");
+      if (result.code === "email_registered_with_google") {
+        setGoogleEmailConflict(true);
+      }
       throw new Error(result.error || "No se pudo crear la cuenta");
     }
 
-    toast.success(result.message || "Cuenta creada correctamente");
-
     if (!result.session) {
       setMode("login");
-      toast.info("Revisa tu correo para confirmar tu cuenta");
+      setPassword("");
+      toast.success(
+        result.message || "Cuenta creada. Revisa tu correo para confirmarla."
+      );
       return;
     }
+
+    toast.success(result.message || "Cuenta creada correctamente");
 
     if (result.session?.access_token && result.session?.refresh_token) {
       const { error: sessionError } = await supabase.auth.setSession({
@@ -256,24 +468,75 @@ export function Auth({
     });
   }
 
-  async function handleLogin() {
+  async function handleCheckSignupEmail() {
+    if (!name.trim()) throw new Error("Ingresa tu nombre");
+    if (!apellidoPat.trim()) throw new Error("Ingresa tu apellido paterno");
+    if (!apellidoMat.trim()) throw new Error("Ingresa tu apellido materno");
     if (!email.trim()) throw new Error("Ingresa tu correo electrónico");
-    if (!password) throw new Error("Ingresa tu contraseña");
 
-    const response = await fetch(`${API_URL}/api/perfiles/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email.trim(),
-        password,
-      }),
-    });
+    let response: Response;
+
+    try {
+      response = await fetch(`${API_URL}/api/perfiles/verificar-correo`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+    } catch {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica que el backend esté encendido."
+      );
+    }
 
     const result = await response.json();
 
     if (!response.ok) {
+      throw new Error(result.error || "No se pudo verificar el correo");
+    }
+
+    if (!result.available) {
+      if (result.code === "email_registered_with_google") {
+        setGoogleEmailConflict(true);
+      }
+
+      throw new Error(result.error || "Este correo ya está registrado");
+    }
+
+    setPassword("");
+    setSignupStep("password");
+  }
+
+  async function handleLogin() {
+    if (!email.trim()) throw new Error("Ingresa tu correo electrónico");
+    if (!password) throw new Error("Ingresa tu contraseña");
+
+    let response: Response;
+
+    try {
+      response = await fetch(`${API_URL}/api/perfiles/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+        }),
+      });
+    } catch {
+      throw new Error(
+        "No se pudo conectar con el servidor. Verifica que el backend esté encendido."
+      );
+    }
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      if (result.code === "email_registered_with_google") {
+        setGoogleEmailConflict(true);
+      }
       throw new Error(result.error || "Correo o contraseña incorrectos");
     }
 
@@ -300,11 +563,16 @@ export function Auth({
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    setGoogleEmailConflict(false);
     setLoading(true);
 
     try {
       if (mode === "signup") {
-        await handleRegister();
+        if (signupStep === "details") {
+          await handleCheckSignupEmail();
+        } else {
+          await handleRegister();
+        }
       } else {
         await handleLogin();
       }
@@ -333,7 +601,7 @@ export function Auth({
     marginBottom: 6,
   };
 
-  if (googleCompletarPerfil) {
+  if (passwordSetupMode) {
     return (
       <div
         className="min-h-screen flex items-center justify-center px-4"
@@ -348,7 +616,6 @@ export function Auth({
         >
           <div className="flex flex-col items-center mb-8">
             <Logo size={44} showName />
-
             <h1
               style={{
                 fontSize: 22,
@@ -358,17 +625,11 @@ export function Auth({
                 marginBottom: 6,
               }}
             >
-              Completa tu perfil
+              Crea tu contraseña
             </h1>
-
-            <p
-              style={{
-                fontSize: 14,
-                color: "#94A3B8",
-                textAlign: "center",
-              }}
-            >
-              Hola {googleNombre}, agrega tus apellidos para continuar.
+            <p style={{ fontSize: 14, color: "#94A3B8", textAlign: "center" }}>
+              Google ya confirmó tu identidad. Después podrás entrar con
+              Google o con {email || "tu correo"}.
             </p>
           </div>
 
@@ -386,35 +647,73 @@ export function Auth({
             </div>
           )}
 
-          <div className="flex flex-col gap-4">
+          <form onSubmit={handleCreatePassword} className="flex flex-col gap-4">
             <div>
-              <label style={labelStyle}>Apellido paterno</label>
-              <input
-                type="text"
-                value={googleApellidoPat}
-                onChange={(e) => setGoogleApellidoPat(e.target.value)}
-                placeholder="Tu apellido paterno"
-                className="w-full px-4 py-3 rounded-xl outline-none"
-                style={inputStyle}
-              />
+              <label style={labelStyle}>Nueva contraseña</label>
+              <div style={{ position: "relative" }}>
+                <Lock
+                  size={16}
+                  color="#94A3B8"
+                  style={{
+                    position: "absolute",
+                    left: 14,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                />
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
+                  required
+                  autoComplete="new-password"
+                  placeholder="Mínimo 8 caracteres"
+                  className="w-full pl-10 pr-10 py-3 rounded-xl outline-none"
+                  style={inputStyle}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((value) => !value)}
+                  style={{
+                    position: "absolute",
+                    right: 14,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#94A3B8",
+                  }}
+                  aria-label={
+                    showNewPassword
+                      ? "Ocultar contraseña"
+                      : "Mostrar contraseña"
+                  }
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             <div>
-              <label style={labelStyle}>Apellido materno</label>
+              <label style={labelStyle}>Confirma la contraseña</label>
               <input
-                type="text"
-                value={googleApellidoMat}
-                onChange={(e) => setGoogleApellidoMat(e.target.value)}
-                placeholder="Tu apellido materno"
+                type={showNewPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                minLength={8}
+                required
+                autoComplete="new-password"
+                placeholder="Repite tu contraseña"
                 className="w-full px-4 py-3 rounded-xl outline-none"
                 style={inputStyle}
               />
             </div>
 
             <button
-              type="button"
+              type="submit"
               disabled={loading}
-              onClick={handleGuardarApellidosGoogle}
               className="w-full py-3.5 rounded-xl mt-2 flex items-center justify-center gap-2"
               style={{
                 background: "#5B88B2",
@@ -424,9 +723,24 @@ export function Auth({
               }}
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
-              Continuar
+              Crear contraseña
             </button>
-          </div>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleContinueWithGoogleOnly}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#94A3B8",
+                cursor: "pointer",
+                fontSize: 13,
+              }}
+            >
+              Omitir y continuar sólo con Google
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -550,6 +864,25 @@ export function Auth({
           </div>
         )}
 
+        {googleEmailConflict && (
+          <button
+            type="button"
+            disabled={loading}
+            onClick={handleGooglePasswordSetup}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl mb-4"
+            style={{
+              background: "rgba(91,136,178,0.16)",
+              border: "1px solid rgba(91,136,178,0.45)",
+              color: "#9FC5E8",
+              fontWeight: 600,
+              opacity: loading ? 0.7 : 1,
+            }}
+          >
+            {loading && <Loader2 size={16} className="animate-spin" />}
+            Verificar con Google y crear contraseña
+          </button>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {mode === "signup" && (
             <>
@@ -607,7 +940,13 @@ export function Auth({
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                  setSignupStep("details");
+                  setPassword("");
+                  setGoogleEmailConflict(false);
+                }}
                 placeholder="tu@correo.com"
                 required
                 className="w-full pl-10 pr-4 py-3 rounded-xl outline-none"
@@ -616,47 +955,55 @@ export function Auth({
             </div>
           </div>
 
-          <div>
-            <label style={labelStyle}>Contraseña</label>
-            <div style={{ position: "relative" }}>
-              <Lock
-                size={16}
-                color="#94A3B8"
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                }}
-              />
-              <input
-                type={showPass ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-                className="w-full pl-10 pr-10 py-3 rounded-xl outline-none"
-                style={inputStyle}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPass((v) => !v)}
-                style={{
-                  position: "absolute",
-                  right: 14,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  color: "#94A3B8",
-                }}
-              >
-                {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+          {(mode === "login" || signupStep === "password") && (
+            <div>
+              <label style={labelStyle}>Contraseña</label>
+              <div style={{ position: "relative" }}>
+                <Lock
+                  size={16}
+                  color="#94A3B8"
+                  style={{
+                    position: "absolute",
+                    left: 14,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                />
+                <input
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  autoComplete={
+                    mode === "signup" ? "new-password" : "current-password"
+                  }
+                  className="w-full pl-10 pr-10 py-3 rounded-xl outline-none"
+                  style={inputStyle}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass((v) => !v)}
+                  style={{
+                    position: "absolute",
+                    right: 14,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#94A3B8",
+                  }}
+                  aria-label={
+                    showPass ? "Ocultar contraseña" : "Mostrar contraseña"
+                  }
+                >
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <button
             type="submit"
@@ -670,7 +1017,11 @@ export function Auth({
             }}
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
-            {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+            {mode === "login"
+              ? "Iniciar sesión"
+              : signupStep === "details"
+                ? "Continuar"
+                : "Crear cuenta"}
           </button>
         </form>
 
@@ -688,6 +1039,9 @@ export function Auth({
             onClick={() => {
               setMode(mode === "login" ? "signup" : "login");
               setError("");
+              setSignupStep("details");
+              setPassword("");
+              setGoogleEmailConflict(false);
             }}
             style={{
               color: "#5B88B2",

@@ -48,7 +48,7 @@ const emotionWheel = [
     nuances: ["Paz", "Aceptación", "Equilibrio", "Claridad", "Descanso"]
   },
   {
-    core: "Agotamiento", color: "#94A3B8", emoji: "😴",
+    core: "Agotamiento", color: "var(--app-text-muted)", emoji: "😴",
     nuances: ["Cansancio físico", "Saturación mental", "Desmotivación", "Vacío", "Apatía"]
   },
 ];
@@ -127,34 +127,34 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: "#121820" }}>
+      <div className="flex-1 flex items-center justify-center" style={{ background: "var(--app-bg)" }}>
         <Loader2 size={28} color="#5B88B2" className="animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-8" style={{ background: "#121820" }}>
+    <div className="flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
       <div className="mb-8">
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: "#E2E8F0" }}>Hola, {userName} 👋</h1>
-        <p style={{ fontSize: 14, color: "#94A3B8", marginTop: 4, textTransform: "capitalize" }}>{today}</p>
+        <h1 style={{ fontSize: "calc(26px * var(--app-font-scale))", fontWeight: 700, color: "var(--app-text)" }}>Hola, {userName} </h1>
+        <p style={{ fontSize: "calc(14px * var(--app-font-scale))", color: "var(--app-text-muted)", marginTop: 4, textTransform: "capitalize" }}>{today}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div style={{ background: "#1A2332", borderRadius: 16, padding: "18px 20px", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p style={{ fontSize: 12, color: "#94A3B8", marginBottom: 6 }}>Días activos</p>
-          <p style={{ fontSize: 28, fontWeight: 700, color: "#5B88B2" }}>{stats.activeDays}</p>
+        <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "18px 20px", border: "1px solid var(--app-border)" }}>
+          <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 6 }}>Días activos</p>
+          <p style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#5B88B2" }}>{stats.activeDays}</p>
         </div>
-        <div style={{ background: "#1A2332", borderRadius: 16, padding: "18px 20px", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p style={{ fontSize: 12, color: "#94A3B8", marginBottom: 6 }}>Entradas en diario</p>
-          <p style={{ fontSize: 28, fontWeight: 700, color: "#4CD964" }}>{stats.totalEntries}</p>
+        <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "18px 20px", border: "1px solid var(--app-border)" }}>
+          <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 6 }}>Entradas en diario</p>
+          <p style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#4CD964" }}>{stats.totalEntries}</p>
         </div>
 
         {/* Tarjeta de Racha actual con el asset de fuego */}
-        <div style={{ background: "#1A2332", borderRadius: 16, padding: "18px 20px", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p style={{ fontSize: 12, color: "#94A3B8", marginBottom: 6 }}>Racha actual</p>
+        <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "18px 20px", border: "1px solid var(--app-border)" }}>
+          <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 6 }}>Racha actual</p>
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: 28, fontWeight: 700, color: "#F5A623" }}>
+            <span style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#F5A623" }}>
               {stats.currentStreak}
             </span>
             {stats.currentStreak > 0 && (
@@ -165,21 +165,21 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div style={{ background: "#1A2332", borderRadius: 16, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "20px 22px", border: "1px solid var(--app-border)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p style={{ fontSize: 13, color: "#94A3B8", fontWeight: 500 }}>Check-in emocional de hoy</p>
+            <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", fontWeight: 500 }}>Check-in emocional de hoy</p>
             {(checkInSaved || todayEmotion) && (
-              <span style={{ fontSize: 11, color: "#4CD964", fontWeight: 600 }}>✓ Guardado</span>
+              <span style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "#4CD964", fontWeight: 600 }}>✓ Guardado</span>
             )}
           </div>
 
           {todayEmotion && !selectedCore && (
-            <div className="mb-3 px-3 py-2 rounded-lg" style={{ background: "#0F1825" }}>
-              <span style={{ fontSize: 11, color: "#94A3B8" }}>Último registro de hoy: </span>
+            <div className="mb-3 px-3 py-2 rounded-lg" style={{ background: "var(--app-surface-alt)" }}>
+              <span style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-text-muted)" }}>Último registro de hoy: </span>
               <span
                 style={{
-                  fontSize: 11,
-                  color: EMOTION_COLORS[todayEmotion.primary_emotion] ?? "#E2E8F0",
+                  fontSize: "calc(11px * var(--app-font-scale))",
+                  color: EMOTION_COLORS[todayEmotion.primary_emotion] ?? "var(--app-text)",
                   fontWeight: 600,
                 }}
               >
@@ -191,19 +191,19 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
 
           {!selectedCore ? (
             <>
-              <p style={{ fontSize: 12, color: "#94A3B8", marginBottom: 12, lineHeight: 1.5 }}>¿Cuál de estas emociones se acerca más a cómo te sientes?</p>
+              <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 12, lineHeight: 1.5 }}>¿Cuál de estas emociones se acerca más a cómo te sientes?</p>
               <div className="grid grid-cols-3 gap-2">
                 {emotionWheel.map(({ core, color, emoji }) => (
                   <button
                     key={core}
                     onClick={() => { setSelectedCore(core); setSelectedNuance(null); }}
                     className="flex flex-col items-center gap-1 p-2.5 rounded-xl transition-all"
-                    style={{ background: "#0F1825", border: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ background: "var(--app-surface-alt)", border: "1px solid var(--app-border)" }}
                     onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = color)}
-                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.06)")}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "var(--app-border)")}
                   >
-                    <span style={{ fontSize: 20, fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}>{emoji}</span>
-                    <span style={{ fontSize: 11, color, fontWeight: 600 }}>{core}</span>
+                    <span style={{ fontSize: "calc(20px * var(--app-font-scale))", fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}>{emoji}</span>
+                    <span style={{ fontSize: "calc(11px * var(--app-font-scale))", color, fontWeight: 600 }}>{core}</span>
                   </button>
                 ))}
               </div>
@@ -212,13 +212,13 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
             <>
               <div className="flex items-center gap-2 mb-3">
                 <button onClick={() => { setSelectedCore(null); setSelectedNuance(null); }}
-                  style={{ fontSize: 12, color: "#94A3B8", background: "none", border: "none", cursor: "pointer", padding: 0 }}>← Cambiar</button>
+                  style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>← Cambiar</button>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: `${selectedEmotion!.color}18`, border: `1px solid ${selectedEmotion!.color}40` }}>
-                  <span style={{ fontSize: 14, fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}>{selectedEmotion!.emoji}</span>
-                  <span style={{ fontSize: 12, color: selectedEmotion!.color, fontWeight: 600 }}>{selectedCore}</span>
+                  <span style={{ fontSize: "calc(14px * var(--app-font-scale))", fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}>{selectedEmotion!.emoji}</span>
+                  <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: selectedEmotion!.color, fontWeight: 600 }}>{selectedCore}</span>
                 </div>
               </div>
-              <p style={{ fontSize: 12, color: "#94A3B8", marginBottom: 10 }}>¿Puedes afinar un poco más?</p>
+              <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 10 }}>¿Puedes afinar un poco más?</p>
               <div className="flex flex-wrap gap-2 mb-4">
                 {selectedEmotion!.nuances.map(n => (
                   <button
@@ -226,9 +226,9 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
                     onClick={() => setSelectedNuance(n)}
                     className="px-3 py-1.5 rounded-full transition-all text-xs"
                     style={{
-                      background: selectedNuance === n ? `${selectedEmotion!.color}20` : "#0F1825",
-                      border: `1px solid ${selectedNuance === n ? selectedEmotion!.color : "rgba(255,255,255,0.08)"}`,
-                      color: selectedNuance === n ? selectedEmotion!.color : "#94A3B8",
+                      background: selectedNuance === n ? `${selectedEmotion!.color}20` : "var(--app-surface-alt)",
+                      border: `1px solid ${selectedNuance === n ? selectedEmotion!.color : "var(--app-border-medium)"}`,
+                      color: selectedNuance === n ? selectedEmotion!.color : "var(--app-text-muted)",
                       fontWeight: selectedNuance === n ? 600 : 400,
                     }}
                   >{n}</button>
@@ -239,9 +239,9 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
                 disabled={!selectedNuance || savingCheckIn}
                 className="w-full py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
                 style={{
-                  background: selectedNuance ? selectedEmotion!.color : "#1E2D42",
-                  color: selectedNuance ? "#fff" : "#2D3F55",
-                  fontWeight: 600, fontSize: 13,
+                  background: selectedNuance ? selectedEmotion!.color : "var(--app-muted)",
+                  color: selectedNuance ? "#fff" : "var(--app-muted-strong)",
+                  fontWeight: 600, fontSize: "calc(13px * var(--app-font-scale))",
                   opacity: savingCheckIn ? 0.7 : 1,
                 }}
               >
@@ -252,55 +252,90 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
           )}
         </div>
 
-        <div style={{ background: "#1A2332", borderRadius: 16, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p style={{ fontSize: 13, color: "#94A3B8", marginBottom: 14, fontWeight: 500 }}>Tu semana emocional</p>
-          <div className="flex gap-3 mb-4">
-            {weekDays.map(({ label, color, emotion }) => (
-              <div key={label}
-                className="flex flex-col items-center gap-2 cursor-default"
-                onMouseEnter={() => setHoveredDay(label)}
-                onMouseLeave={() => setHoveredDay(null)}
-              >
+        <div className="flex flex-col h-full" style={{ background: "var(--app-surface)", borderRadius: 16, padding: "20px 22px", border: "1px solid var(--app-border)" }}>
+          <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 14, fontWeight: 500 }}>Tu semana emocional</p>
+          
+          {/* Contenedor flexible que centra todo el bloque para no dejar huecos enormes */}
+          <div className="flex flex-col flex-1 justify-center">
+            
+            <div className="flex justify-between px-2">
+              {weekDays.map(({ label, color, emotion }) => (
                 <div
-                  style={{
-                    width: 34, height: 34, borderRadius: "50%",
-                    background: color ?? "#1E2D42",
-                    border: color ? "none" : "2px dashed #2D3F55",
-                    opacity: color ? 1 : 0.4,
-                    transition: "transform 0.15s",
-                    transform: hoveredDay === label && color ? "scale(1.15)" : "scale(1)",
-                  }}
-                />
-                <span style={{ fontSize: 11, color: "#94A3B8" }}>{label}</span>
-              </div>
-            ))}
-          </div>
-          {hoveredDay && weekDays.find(d => d.label === hoveredDay)?.emotion && (
-            <div className="px-3 py-2 rounded-lg mb-3" style={{ background: "#0F1825" }}>
-              <span style={{ fontSize: 12, color: "#E2E8F0" }}>{hoveredDay}: </span>
-              <span style={{ fontSize: 12, color: weekDays.find(d => d.label === hoveredDay)!.color ?? "#94A3B8" }}>
-                {weekDays.find(d => d.label === hoveredDay)!.emotion}
-              </span>
+                  key={label}
+                  className="relative flex flex-col items-center gap-2 cursor-default"
+                  onMouseEnter={() => setHoveredDay(label)}
+                  onMouseLeave={() => setHoveredDay(null)}
+                >
+                  {/* Tooltip flotante con position absolute */}
+                  {hoveredDay === label && emotion && (
+                    <div 
+                      className="absolute z-10 px-3 py-1.5 rounded-lg whitespace-nowrap pointer-events-none shadow-sm"
+                      style={{ 
+                        bottom: "100%", 
+                        marginBottom: "8px", 
+                        background: "var(--app-surface-alt)",
+                        border: "1px solid var(--app-border)"
+                      }}
+                    >
+                      <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text)" }}>{label}: </span>
+                      <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: color ?? "var(--app-text-muted)", fontWeight: 500 }}>
+                        {emotion}
+                      </span>
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: "50%",
+                      background: color ?? "var(--app-muted)",
+                      border: color ? "none" : "2px dashed var(--app-muted-strong)",
+                      opacity: color ? 1 : 0.4,
+                      transition: "transform 0.15s",
+                      transform: hoveredDay === label && color ? "scale(1.15)" : "scale(1)",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "calc(12px * var(--app-font-scale))",
+                      color: "var(--app-text-muted)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {label}
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
-          <div className="flex flex-wrap gap-3">
-            {emotionWheel.slice(0, 4).map(({ core, color }) => (
-              <div key={core} className="flex items-center gap-1.5">
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: color }} />
-                <span style={{ fontSize: 11, color: "#94A3B8" }}>{core}</span>
-              </div>
-            ))}
+
+            {/* Línea sutil separadora para estructurar el espacio */}
+            <div className="w-full my-6" style={{ height: 1, background: "var(--app-border)", opacity: 0.6 }} />
+
+            {/* Leyenda de emociones en formato 3x2 y más grande */}
+            <div className="grid grid-cols-3 gap-y-4 gap-x-2">
+              {emotionWheel.map(({ core, color }) => (
+                <div key={core} className="flex items-center gap-2">
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: color }} />
+                  <span style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", fontWeight: 500 }}>
+                    {core}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
           </div>
         </div>
+
       </div>
 
-      <div style={{ background: "#1A2332", borderRadius: 16, padding: "20px 22px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 20 }}>
+      <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "20px 22px", border: "1px solid var(--app-border)", marginBottom: 20 }}>
         <div className="flex items-center justify-between mb-4">
-          <p style={{ fontSize: 14, fontWeight: 600, color: "#E2E8F0" }}>Entradas recientes del diario</p>
-          <button onClick={onOpenDiary} style={{ fontSize: 12, color: "#5B88B2", background: "none", border: "none", cursor: "pointer" }}>Ver todas →</button>
+          <p style={{ fontSize: "calc(14px * var(--app-font-scale))", fontWeight: 600, color: "var(--app-text)" }}>Entradas recientes del diario</p>
+          <button onClick={onOpenDiary} style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "#5B88B2", background: "none", border: "none", cursor: "pointer" }}>Ver todas →</button>
         </div>
         {recentEntries.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#94A3B8", textAlign: "center", padding: "16px 0" }}>
+          <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", textAlign: "center", padding: "16px 0" }}>
             Aún no tienes entradas. ¡Escribe tu primera en el diario!
           </p>
         ) : (
@@ -308,21 +343,21 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
             {recentEntries.map(entry => {
               const tagColor = getTagColor(entry.tag);
               return (
-                <div key={entry.id} className="flex items-start gap-3 p-3 rounded-xl transition-all cursor-pointer" style={{ background: "#0F1825" }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "#162030")}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "#0F1825")}
+                <div key={entry.id} className="flex items-start gap-3 p-3 rounded-xl transition-all cursor-pointer" style={{ background: "var(--app-surface-alt)" }}
+                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--app-muted)")}
+                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "var(--app-surface-alt)")}
                   onClick={onOpenDiary}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span style={{ fontSize: 11, color: "#94A3B8" }}>{formatEntryDate(entry.created_at)}</span>
+                      <span style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-text-muted)" }}>{formatEntryDate(entry.created_at)}</span>
                       {entry.tag && (
-                        <span className="px-2 py-0.5 rounded-full" style={{ fontSize: 10, background: `${tagColor}22`, color: tagColor, fontWeight: 600 }}>{entry.tag}</span>
+                        <span className="px-2 py-0.5 rounded-full" style={{ fontSize: "calc(10px * var(--app-font-scale))", background: `${tagColor}22`, color: tagColor, fontWeight: 600 }}>{entry.tag}</span>
                       )}
                     </div>
-                    <p style={{ fontSize: 13, color: "#94A3B8", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{entry.text}</p>
+                    <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{entry.text}</p>
                   </div>
-                  <ChevronRight size={14} color="#94A3B8" style={{ flexShrink: 0, marginTop: 4 }} />
+                  <ChevronRight size={14} color="var(--app-text-muted)" style={{ flexShrink: 0, marginTop: 4 }} />
                 </div>
               );
             })}
@@ -333,7 +368,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
       <button
         onClick={onOpenChat}
         className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl transition-all"
-        style={{ background: "#5B88B2", color: "#fff", fontWeight: 600, fontSize: 16 }}
+        style={{ background: "#5B88B2", color: "#fff", fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale))" }}
         onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "#4a76a0")}
         onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "#5B88B2")}
       >

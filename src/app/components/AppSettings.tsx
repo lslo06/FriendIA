@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import {
+  DEFAULT_SETTINGS,
   deleteAccount,
   deleteChatHistory,
-  fetchSettings,
-  saveSettings,
+  normalizeFontSize,
+  type SettingsUpdates,
 } from "@/lib/settings";
 
 interface AppSettingsProps {
@@ -14,32 +16,26 @@ interface AppSettingsProps {
 }
 
 export function AppSettings({ userId, onLogout }: AppSettingsProps) {
-  const [loading, setLoading] = useState(true);
+  const { settings, updateSettings } = useAuth();
   const [saving, setSaving] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-  const [fontSize, setFontSize] = useState("Normal");
-  const [dailyCheckIn, setDailyCheckIn] = useState(true);
-  const [saveHistory, setSaveHistory] = useState(true);
-  const [reminderTime, setReminderTime] = useState("20:00");
+  const darkMode = settings?.modo_oscuro ?? true;
+  const fontSize = normalizeFontSize(
+    settings?.tamano_fuente ?? DEFAULT_SETTINGS.tamano_fuente
+  );
+  const dailyCheckIn = settings?.registro_diario_activo
+    ?? DEFAULT_SETTINGS.registro_diario_activo;
+  const saveHistory = settings?.guardar_historial_chat
+    ?? DEFAULT_SETTINGS.guardar_historial_chat;
+  const reminderTime = settings?.hora_registro
+    ?? DEFAULT_SETTINGS.hora_registro
+    ?? "20:00";
 
-  useEffect(() => {
-    fetchSettings(userId)
-      .then(s => {
-        setDarkMode(s.modo_oscuro);
-        setFontSize(s.tamano_fuente === 1 ? "Normal" : s.tamano_fuente === 2 ? "Grande" : "Pequeño");
-        setDailyCheckIn(s.registro_diario_activo);
-        setSaveHistory(s.guardar_historial_chat);
-        setReminderTime(s.hora_registro || "20:00");
-      })
-      .catch(() => toast.error("No se pudo cargar la configuración"))
-      .finally(() => setLoading(false));
-  }, [userId]);
-
-  async function persist(updates: Parameters<typeof saveSettings>[1]) {
+  async function persist(updates: SettingsUpdates) {
     setSaving(true);
     try {
-      await saveSettings(userId, updates);
-    } catch {
+      await updateSettings(updates);
+    } catch (error) {
+      console.error("Error guardando la configuración:", error);
       toast.error("No se pudo guardar la configuración");
     } finally {
       setSaving(false);
@@ -49,12 +45,14 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
   function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
     return (
       <button
+        type="button"
         onClick={() => onChange(!value)}
         disabled={saving}
+        aria-pressed={value}
         className="relative transition-all"
         style={{
           width: 44, height: 24, borderRadius: 12,
-          background: value ? "#5B88B2" : "#2D3F55",
+          background: value ? "#5B88B2" : "var(--app-muted-strong)",
           border: "none", cursor: saving ? "not-allowed" : "pointer", flexShrink: 0,
           opacity: saving ? 0.6 : 1,
         }}
@@ -71,8 +69,8 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
   function Section({ label, children }: { label: string; children: React.ReactNode }) {
     return (
       <div className="mb-6">
-        <p style={{ fontSize: 11, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, marginBottom: 8 }}>{label}</p>
-        <div style={{ background: "#1A2332", borderRadius: 16, border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+        <p style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, marginBottom: 8 }}>{label}</p>
+        <div style={{ background: "var(--app-surface)", borderRadius: 16, border: "1px solid var(--app-border)", overflow: "hidden" }}>
           {children}
         </div>
       </div>
@@ -83,10 +81,10 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
     return (
       <div
         className="flex items-center justify-between px-5 py-4"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: onClick ? "pointer" : "default" }}
+        style={{ borderBottom: "1px solid var(--app-border-subtle)", cursor: onClick ? "pointer" : "default" }}
         onClick={onClick}
       >
-        <span style={{ fontSize: 14, color: danger ? "#E24B4A" : "#E2E8F0" }}>{label}</span>
+        <span style={{ fontSize: "calc(14px * var(--app-font-scale))", color: danger ? "#E24B4A" : "var(--app-text)" }}>{label}</span>
         {control}
       </div>
     );
@@ -113,17 +111,9 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center" style={{ background: "#121820" }}>
-        <Loader2 size={28} color="#5B88B2" className="animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex-1 overflow-y-auto p-8" style={{ background: "#121820" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: "#E2E8F0", marginBottom: 24 }}>Configuración</h1>
+    <div className="flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
+      <h1 style={{ fontSize: "calc(24px * var(--app-font-scale))", fontWeight: 700, color: "var(--app-text)", marginBottom: 24 }}>Configuración</h1>
 
       <Section label="Apariencia">
         <Row
@@ -131,19 +121,20 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
           control={
             <Toggle
               value={darkMode}
-              onChange={v => { setDarkMode(v); persist({ modo_oscuro: v }); }}
+              onChange={value => persist({ modo_oscuro: value })}
             />
           }
         />
         <Row label="Tamaño de texto" control={
           <select
             value={fontSize}
-            onChange={e => { setFontSize(e.target.value); persist({ tamano_fuente: e.target.value === "Normal" ? 1 : e.target.value === "Grande" ? 2 : 0 }); }}
-            style={{ background: "#0F1825", border: "1px solid rgba(255,255,255,0.1)", color: "#E2E8F0", borderRadius: 8, padding: "4px 10px", fontSize: 13 }}
+            disabled={saving}
+            onChange={event => persist({ tamano_fuente: Number(event.target.value) })}
+            style={{ background: "var(--app-surface-alt)", border: "1px solid var(--app-border-strong)", color: "var(--app-text)", borderRadius: 8, padding: "4px 10px", fontSize: "calc(13px * var(--app-font-scale))" }}
           >
-            <option>Normal</option>
-            <option>Grande</option>
-            <option>Pequeño</option>
+            <option value={13}>Pequeño</option>
+            <option value={14}>Normal</option>
+            <option value={16}>Grande</option>
           </select>
         } />
       </Section>
@@ -154,7 +145,7 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
           control={
             <Toggle
               value={dailyCheckIn}
-              onChange={v => { setDailyCheckIn(v); persist({ registro_diario_activo: v }); }}
+              onChange={value => persist({ registro_diario_activo: value })}
             />
           }
         />
@@ -162,8 +153,9 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
           <input
             type="time"
             value={reminderTime}
-            onChange={e => { setReminderTime(e.target.value); persist({ hora_registro: e.target.value }); }}
-            style={{ background: "#0F1825", border: "1px solid rgba(255,255,255,0.1)", color: "#E2E8F0", borderRadius: 8, padding: "4px 10px", fontSize: 13 }}
+            disabled={!dailyCheckIn || saving}
+            onChange={event => persist({ hora_registro: event.target.value })}
+            style={{ background: "var(--app-surface-alt)", border: "1px solid var(--app-border-strong)", color: "var(--app-text)", borderRadius: 8, padding: "4px 10px", fontSize: "calc(13px * var(--app-font-scale))" }}
           />
         } />
       </Section>
@@ -174,7 +166,7 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
           control={
             <Toggle
               value={saveHistory}
-              onChange={v => { setSaveHistory(v); persist({ guardar_historial_chat: v }); }}
+              onChange={value => persist({ guardar_historial_chat: value })}
             />
           }
         />
@@ -190,7 +182,7 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
         <Row
           label="Cerrar sesión"
           onClick={onLogout}
-          control={<ChevronRight size={16} color="#94A3B8" />}
+          control={<ChevronRight size={16} color="var(--app-text-muted)" />}
         />
         <Row
           label="Eliminar cuenta"

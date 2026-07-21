@@ -19,6 +19,15 @@ import { ConsultorioPage } from "./components/ConsultorioPage";
 type AppScreen = "landing" | "auth" | "survey" | "app" | "consultorio";
 type AppTab = "dashboard" | "diary" | "chat" | "help" | "profile" | "settings";
 
+function isPasswordSetupFlow() {
+  return (
+    new URLSearchParams(window.location.search).get("auth_action") ===
+      "create-password" ||
+    window.sessionStorage.getItem("friendia:auth_action") ===
+      "create-password"
+  );
+}
+
 export default function App() {
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const [screen, setScreen] = useState<AppScreen>("landing");
@@ -30,6 +39,13 @@ export default function App() {
 
   useEffect(() => {
     if (loading || !user) return;
+
+    if (isPasswordSetupFlow()) {
+      setAuthMode("login");
+      if (screen !== "auth") setScreen("auth");
+      return;
+    }
+
     if (profile?.survey_completed && (screen === "landing" || screen === "auth")) {
       setScreen("app");
     } else if (!profile?.survey_completed && (screen === "landing" || screen === "auth")) {
@@ -87,6 +103,7 @@ export default function App() {
             userId={user.id}
             userName={userName}
             email={user.email ?? ""}
+            profile={profile}
             onProfileUpdate={refreshProfile}
           />
         );
@@ -102,7 +119,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#121820" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--app-bg)" }}>
         <Loader2 size={32} color="#5B88B2" className="animate-spin" />
       </div>
     );
@@ -139,11 +156,17 @@ export default function App() {
   }
 
   if (screen === "survey") {
-    return <Survey userName={userName} onComplete={handleSurveyComplete} />;
+    return (
+      <Survey
+        userName={userName}
+        initialProfile={profile}
+        onComplete={handleSurveyComplete}
+      />
+    );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#121820" }}>
+    <div className="friendia-app flex h-screen overflow-hidden" style={{ background: "var(--app-bg)" }}>
       <Sidebar
         active={activeTab}
         onNavigate={tab => setActiveTab(tab)}

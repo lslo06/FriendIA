@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
+import type { UserProfile } from "@/lib/types";
 import { Logo } from "./Logo";
 
 interface SurveyProps {
   userName: string;
+  initialProfile?: UserProfile | null;
   onComplete: (data: SurveyData) => void;
 }
 
@@ -47,19 +49,57 @@ const tones = [
   },
 ];
 
-export function Survey({ userName, onComplete }: SurveyProps) {
-  const [step, setStep] = useState(1);
+function hasSavedPersonalData(profile?: UserProfile | null) {
+  return Boolean(
+    profile?.nombre?.trim() &&
+      profile.apellido_pat?.trim() &&
+      profile.apellido_mat?.trim()
+  );
+}
+
+export function Survey({
+  userName,
+  initialProfile,
+  onComplete,
+}: SurveyProps) {
+  const [step, setStep] = useState(() =>
+    hasSavedPersonalData(initialProfile) ? 2 : 1
+  );
   const [error, setError] = useState("");
 
-  const [data, setData] = useState<SurveyData>({
-    name: userName,
-    apellido_pat: "",
-    apellido_mat: "",
-    gender: "",
+  const [data, setData] = useState<SurveyData>(() => ({
+    name: initialProfile?.nombre?.trim() || userName,
+    apellido_pat: initialProfile?.apellido_pat?.trim() || "",
+    apellido_mat: initialProfile?.apellido_mat?.trim() || "",
+    gender: initialProfile?.genero || "",
     disability: "",
-    concerns: [],
-    tone: "",
-  });
+    concerns: initialProfile?.preocupaciones ?? [],
+    tone: initialProfile?.tono_preferido || "",
+  }));
+
+  useEffect(() => {
+    if (!initialProfile) return;
+
+    setData((current) => ({
+      ...current,
+      name: current.name.trim() || initialProfile.nombre?.trim() || userName,
+      apellido_pat:
+        current.apellido_pat.trim() || initialProfile.apellido_pat?.trim() || "",
+      apellido_mat:
+        current.apellido_mat.trim() || initialProfile.apellido_mat?.trim() || "",
+      gender: current.gender || initialProfile.genero || "",
+      concerns:
+        current.concerns.length > 0
+          ? current.concerns
+          : initialProfile.preocupaciones ?? [],
+      tone: current.tone || initialProfile.tono_preferido || "",
+    }));
+
+    if (hasSavedPersonalData(initialProfile)) {
+      setStep((current) => (current === 1 ? 2 : current));
+      setError("");
+    }
+  }, [initialProfile, userName]);
 
   const totalSteps = data.gender === "Mujer" ? 6 : 5;
 
