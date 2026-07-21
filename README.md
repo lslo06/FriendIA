@@ -142,4 +142,7 @@ src/
 
 ---
 
-> 💡 **Tip para Codex:** Al dar cada prompt, incluye el archivo completo que debe modificar junto con el contexto de arriba. Codex funciona mejor cuando le das el código existente + la instrucción específica de qué cambiar.
+
+
+
+
