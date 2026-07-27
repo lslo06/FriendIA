@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 
+# La app Android vive en C:\Moviles\FriendIA-Android
+mobile/
+
 # Local environment variables
 .env
 .env.local
