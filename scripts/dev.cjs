@@ -1,10 +1,16 @@
 const { spawn } = require('node:child_process');
 
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const pnpmCommand = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+const isWindows = process.platform === 'win32';
+const npmCommand = isWindows ? 'npm.cmd' : 'npm';
+const pnpmCommand = isWindows ? 'pnpm.cmd' : 'pnpm';
+const spawnOptions = {
+  stdio: 'inherit',
+  // Node 24 requiere un shell para lanzar wrappers .cmd en Windows.
+  shell: isWindows,
+};
 const children = [
-  spawn(npmCommand, ['--prefix', 'backend', 'run', 'dev'], { stdio: 'inherit' }),
-  spawn(pnpmCommand, ['exec', 'vite'], { stdio: 'inherit' }),
+  spawn(npmCommand, ['--prefix', 'backend', 'run', 'dev'], spawnOptions),
+  spawn(pnpmCommand, ['exec', 'vite'], spawnOptions),
 ];
 
 let stopping = false;
