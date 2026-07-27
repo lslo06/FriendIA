@@ -179,3 +179,104 @@
     line-height: 1.5;
   }
 }
+
+:root,
+html[data-friendia-theme="dark"] {
+  --app-font-scale: 1;
+  --app-bg: #121820;
+  --app-surface: #1A2332;
+  --app-surface-alt: #0F1825;
+  --app-muted: #1E2D42;
+  --app-muted-strong: #2D3F55;
+  --app-text: #E2E8F0;
+  --app-text-muted: #94A3B8;
+  --app-border-subtle: rgba(255, 255, 255, 0.04);
+  --app-border: rgba(255, 255, 255, 0.06);
+  --app-border-medium: rgba(255, 255, 255, 0.08);
+  --app-border-strong: rgba(255, 255, 255, 0.1);
+  --app-hover: rgba(255, 255, 255, 0.04);
+}
+
+html[data-friendia-theme="light"] {
+  --app-bg: #F3F6FA;
+  --app-surface: #FFFFFF;
+  --app-surface-alt: #EAF0F6;
+  --app-muted: #DDE6EF;
+  --app-muted-strong: #C5D1DE;
+  --app-text: #172033;
+  --app-text-muted: #5F6B7A;
+  --app-border-subtle: rgba(23, 32, 51, 0.05);
+  --app-border: rgba(23, 32, 51, 0.09);
+  --app-border-medium: rgba(23, 32, 51, 0.12);
+  --app-border-strong: rgba(23, 32, 51, 0.16);
+  --app-hover: rgba(91, 136, 178, 0.1);
+
+  --background: #F3F6FA;
+  --foreground: #172033;
+  --card: #FFFFFF;
+  --card-foreground: #172033;
+  --popover: #FFFFFF;
+  --popover-foreground: #172033;
+  --secondary: #EAF0F6;
+  --secondary-foreground: #172033;
+  --muted: #EAF0F6;
+  --muted-foreground: #5F6B7A;
+  --border: rgba(23, 32, 51, 0.12);
+  --input: #DDE6EF;
+  --input-background: #FFFFFF;
+  --switch-background: #C5D1DE;
+}
+
+.friendia-app {
+  background: var(--app-bg);
+  color: var(--app-text);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+/* Microinteracciones compartidas: sutiles, rápidas y coherentes. */
+.friendia-app button,
+.friendia-app a,
+.friendia-app [role="button"] {
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.friendia-app button:not(:disabled):hover,
+.friendia-app a:hover,
+.friendia-app [role="button"]:hover {
+  transform: translateY(-1px);
+}
+
+.friendia-app button:not(:disabled):active,
+.friendia-app a:active,
+.friendia-app [role="button"]:active {
+  transform: translateY(0) scale(0.975);
+}
+
+.friendia-app button:focus-visible,
+.friendia-app a:focus-visible,
+.friendia-app [role="button"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(91, 136, 178, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .friendia-app button,
+  .friendia-app a,
+  .friendia-app [role="button"] {
+    transform: none !important;
+  }
+}
