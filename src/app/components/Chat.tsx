@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, AlertTriangle, Clock, Wind, Anchor } from "lucide-react";
+import { Send, AlertTriangle, Clock, Wind, Anchor, Loader2, History, Plus, X } from "lucide-react";
 import logoImg from "@/assets/logo.png";
+import { getChatMessages, listChatSessions, requestChatReply, type ChatApiMessage, type ChatSession } from "@/lib/chat";
 
 interface Message {
   id: number;
@@ -41,24 +42,35 @@ const groundingTechniques = [
   }
 ];
 
-const initialMessages: Message[] = [
-  { id: 1, from: "bot", text: `Hola, me alegra que estés aquí. ¿Cómo te has sentido hoy? 💙`, time: "9:00" },
-  { id: 2, from: "user", text: "Hoy fue un día bastante difícil, tuve mucho estrés en el trabajo.", time: "9:01" },
-  { id: 3, from: "bot", text: "Entiendo, el estrés laboral puede ser muy agotador. ¿Qué fue lo que lo desencadenó? Cuéntame a tu ritmo — estoy aquí para escucharte. 🌿", time: "9:01" },
-];
+function createInitialMessages(userName: string): Message[] {
+  const name = userName.trim();
+  return [{
+    id: 1,
+    from: "bot",
+    text: `Hola${name ? `, ${name}` : ""}. Me alegra que estés aquí. ¿Cómo te has sentido hoy? 💙`,
+    time: now(),
+  }];
+}
 
 const SESSION_WARN_MIN = 30;
 
 export function Chat({ userName, onEmergency }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(() => createInitialMessages(userName));
   const [input, setInput] = useState("");
-  const [sessionMin, setSessionMin] = useState(8);
+  const [isSending, setIsSending] = useState(false);
+  const [sessionMin, setSessionMin] = useState(0);
   const [showGrounding, setShowGrounding] = useState(false);
   const [groundingIdx, setGroundingIdx] = useState(0);
   const [showOveruseWarning, setShowOveruseWarning] = useState(false);
   const [negativeCount, setNegativeCount] = useState(0);
+  const [showHistory, setShowHistory] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const sessionRef = useRef<ReturnType<typeof setInterval>>();
+  const chatSessionIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     sessionRef.current = setInterval(() => {
@@ -73,7 +85,60 @@ export function Chat({ userName, onEmergency }: ChatProps) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isSending]);
+
+  useEffect(() => {
+    if (!showHistory && !showGrounding) inputRef.current?.focus();
+  }, [isSending, showHistory, showGrounding]);
+
+  async function openHistory() {
+    setShowHistory(true);
+    setIsLoadingHistory(true);
+    setHistoryError("");
+    try {
+      setSessions(await listChatSessions());
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "No se pudo cargar el historial";
+      setHistoryError(text);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }
+
+  function startNewChat() {
+    chatSessionIdRef.current = null;
+    setMessages(createInitialMessages(userName));
+    setShowHistory(false);
+    setNegativeCount(0);
+    setShowGrounding(false);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  async function openSession(session: ChatSession) {
+    setIsLoadingHistory(true);
+    try {
+      const stored = await getChatMessages(session.id_sesion_chat);
+      setMessages(stored.map((message, index) => ({
+        id: new Date(message.creado_en).getTime() + index,
+        from: message.rol === "bot" ? "bot" : "user",
+        text: message.contenido,
+        time: new Date(message.creado_en).toLocaleTimeString("es-MX", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      })));
+      chatSessionIdRef.current = session.id_sesion_chat;
+      setShowHistory(false);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "No se pudo abrir la conversación";
+      setMessages(current => [...current, { id: Date.now(), from: "bot", text, time: now() }]);
+      setShowHistory(false);
+      requestAnimationFrame(() => inputRef.current?.focus());
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }
 
   function detectAndRespond(userText: string): { isCrisis: boolean; isRumination: boolean } {
     const lower = userText.toLowerCase();
@@ -82,8 +147,8 @@ export function Chat({ userName, onEmergency }: ChatProps) {
     return { isCrisis, isRumination };
   }
 
-  function sendMessage() {
-    if (!input.trim()) return;
+  async function sendMessage() {
+    if (!input.trim() || isSending) return;
     const text = input.trim();
     const userMsg: Message = { id: Date.now(), from: "user", text, time: now() };
 
@@ -91,31 +156,82 @@ export function Chat({ userName, onEmergency }: ChatProps) {
     const newNeg = isRumination ? negativeCount + 1 : 0;
     setNegativeCount(newNeg);
 
-    let botText = "";
-    let msgType: Message["type"] = "normal";
-
     if (isCrisis) {
-      botText = "Noto que estás pasando por algo muy intenso ahora mismo. Lo que sientes importa, y no estás solo/a. ¿Estarías dispuesto/a a hablar con un profesional que puede acompañarte mejor en este momento? 💙";
+      const botMsg: Message = {
+        id: Date.now() + 1,
+        from: "bot",
+        text: "Lo que estás viviendo importa. Si corres peligro o podrías hacerte daño, llama ahora a emergencias (911 en México) o pide a una persona de confianza que se quede contigo. Abre las opciones de ayuda inmediata para encontrar más apoyo.",
+        time: now(),
+        type: "normal",
+      };
+      setMessages(current => [...current, userMsg, botMsg]);
+      setInput("");
       setTimeout(() => onEmergency(), 1200);
-    } else if (newNeg >= 2) {
-      msgType = "grounding";
-      botText = "He notado que llevamos un rato en pensamientos que se repiten y eso puede ser agotador. A veces es útil hacer una pequeña pausa para anclar la mente al momento presente antes de continuar. ¿Te gustaría intentar una técnica breve de regulación? 🌿";
+      return;
+    }
+
+    if (newNeg >= 2) {
+      const botMsg: Message = {
+        id: Date.now() + 1,
+        from: "bot",
+        text: "He notado que llevamos un rato en pensamientos que se repiten y eso puede ser agotador. A veces es útil hacer una pequeña pausa para anclar la mente al momento presente antes de continuar. ¿Te gustaría intentar una técnica breve de regulación? 🌿",
+        time: now(),
+        type: "grounding",
+      };
       setShowGrounding(true);
       setGroundingIdx(Math.floor(Math.random() * groundingTechniques.length));
       setNegativeCount(0);
-    } else {
-      botText = "Gracias por compartir eso conmigo. ¿Cómo te hace sentir hablar de esto? 💙";
+      setMessages(current => [...current, userMsg, botMsg]);
+      setInput("");
+      return;
     }
 
-    const botMsg: Message = { id: Date.now() + 1, from: "bot", text: botText, time: now(), type: msgType };
-    setMessages(m => [...m, userMsg, botMsg]);
+    const conversation = [...messages, userMsg];
+    const apiMessages: ChatApiMessage[] = conversation
+      .filter(message => message.from !== "system")
+      .map(message => ({
+        role: message.from === "bot" ? "model" : "user",
+        text: message.text,
+      }));
+
+    setMessages(current => [...current, userMsg]);
     setInput("");
+    setIsSending(true);
+
+    try {
+      const result = await requestChatReply(apiMessages, chatSessionIdRef.current);
+      if (result.sessionId) chatSessionIdRef.current = result.sessionId;
+
+      const botMsg: Message = {
+        id: Date.now() + 1,
+        from: "bot",
+        text: result.reply,
+        time: now(),
+        type: "normal",
+      };
+      setMessages(current => [...current, botMsg]);
+
+      if (result.crisis) setTimeout(() => onEmergency(), 300);
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "No pude responder en este momento. Intenta de nuevo.";
+      setMessages(current => [...current, {
+        id: Date.now() + 1,
+        from: "bot",
+        text: message,
+        time: now(),
+        type: "normal",
+      }]);
+    } finally {
+      setIsSending(false);
+    }
   }
 
   const gt = groundingTechniques[groundingIdx];
 
   return (
-    <div className="flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
+    <div className="relative flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
         <div className="flex items-center gap-3">
@@ -130,11 +246,66 @@ export function Chat({ userName, onEmergency }: ChatProps) {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2" style={{ color: sessionMin >= SESSION_WARN_MIN ? "#F5A623" : "var(--app-text-muted)" }}>
-          <Clock size={14} />
-          <span style={{ fontSize: "calc(12px * var(--app-font-scale))" }}>Sesión de hoy: {sessionMin} min</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => void openHistory()}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{ color: "var(--app-text)", background: "var(--app-muted)", border: "none", cursor: "pointer" }}
+            aria-label="Abrir historial de conversaciones"
+          >
+            <History size={15} />
+            <span className="hidden sm:inline" style={{ fontSize: "calc(12px * var(--app-font-scale))" }}>Historial</span>
+          </button>
+          <div className="hidden md:flex items-center gap-2" style={{ color: sessionMin >= SESSION_WARN_MIN ? "#F5A623" : "var(--app-text-muted)" }}>
+            <Clock size={14} />
+            <span style={{ fontSize: "calc(12px * var(--app-font-scale))" }}>Sesión de hoy: {sessionMin} min</span>
+          </div>
         </div>
       </div>
+
+      {showHistory && (
+        <div className="absolute inset-0 z-40 flex justify-end" style={{ background: "rgba(0,0,0,0.35)" }} onClick={() => setShowHistory(false)}>
+          <aside
+            className="h-full w-full sm:w-96 p-5 overflow-y-auto"
+            style={{ background: "var(--app-surface)", borderLeft: "1px solid var(--app-border)" }}
+            onClick={event => event.stopPropagation()}
+            aria-label="Historial de conversaciones"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h2 style={{ color: "var(--app-text)", fontSize: 18, fontWeight: 700 }}>Tus conversaciones</h2>
+              <button onClick={() => setShowHistory(false)} aria-label="Cerrar historial" style={{ background: "none", border: 0, color: "var(--app-text)", cursor: "pointer" }}>
+                <X size={20} />
+              </button>
+            </div>
+            <button onClick={startNewChat} className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 mb-4" style={{ background: "#5B88B2", color: "#fff", border: 0, cursor: "pointer", fontWeight: 600 }}>
+              <Plus size={17} /> Nueva conversación
+            </button>
+            {isLoadingHistory ? (
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin" color="#5B88B2" /></div>
+            ) : historyError ? (
+              <div className="rounded-xl p-4 text-center" style={{ background: "rgba(226,75,74,0.08)", border: "1px solid rgba(226,75,74,0.25)" }}>
+                <p style={{ color: "var(--app-text)", fontSize: 14 }}>{historyError}</p>
+                <button onClick={() => void openHistory()} className="mt-3 px-4 py-2 rounded-lg" style={{ background: "#5B88B2", color: "#fff", border: 0, cursor: "pointer" }}>
+                  Reintentar
+                </button>
+              </div>
+            ) : sessions.length === 0 ? (
+              <p className="text-center py-10" style={{ color: "var(--app-text-muted)", fontSize: 14 }}>Aún no tienes conversaciones guardadas.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {sessions.map(session => (
+                  <button key={session.id_sesion_chat} onClick={() => void openSession(session)} className="text-left rounded-xl p-3" style={{ background: "var(--app-bg)", border: "1px solid var(--app-border)", cursor: "pointer" }}>
+                    <p style={{ color: "var(--app-text)", fontSize: 14, fontWeight: 600 }}>{session.nombre_sesion || "Conversación"}</p>
+                    <p style={{ color: "var(--app-text-muted)", fontSize: 11, marginTop: 4 }}>
+                      {new Date(session.actualizado_en || session.iniciado_en).toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" })}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
 
       {/* Overuse warning banner */}
       {showOveruseWarning && (
@@ -213,6 +384,23 @@ export function Chat({ userName, onEmergency }: ChatProps) {
           </div>
         )}
 
+        {isSending && (
+          <div className="flex justify-start">
+            <div
+              className="px-4 py-3 rounded-2xl flex items-center gap-2"
+              style={{
+                background: "rgba(91,136,178,0.15)",
+                color: "var(--app-text-muted)",
+                fontSize: "calc(13px * var(--app-font-scale))",
+                borderTopLeftRadius: 4,
+              }}
+            >
+              <Loader2 size={14} className="animate-spin" />
+              FriendIA está escribiendo…
+            </div>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -227,19 +415,31 @@ export function Chat({ userName, onEmergency }: ChatProps) {
       <div className="px-6 pb-5">
         <div className="flex items-center gap-3 p-2 pl-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
           <input
+            ref={inputRef}
+            autoFocus
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && sendMessage()}
+            onKeyDown={e => {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                void sendMessage();
+              }
+            }}
             placeholder="Escribe cómo te sientes..."
             className="flex-1 outline-none bg-transparent"
             style={{ fontSize: "calc(14px * var(--app-font-scale))", color: "var(--app-text)" }}
           />
           <button
-            onClick={sendMessage}
+            onClick={() => void sendMessage()}
+            disabled={isSending || !input.trim()}
+            aria-label="Enviar mensaje"
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
-            style={{ background: input.trim() ? "#5B88B2" : "var(--app-muted)" }}
+            style={{
+              background: input.trim() && !isSending ? "#5B88B2" : "var(--app-muted)",
+              cursor: input.trim() && !isSending ? "pointer" : "not-allowed",
+            }}
           >
-            <Send size={16} color={input.trim() ? "#fff" : "var(--app-text-muted)"} />
+            <Send size={16} color={input.trim() && !isSending ? "#fff" : "var(--app-text-muted)"} />
           </button>
         </div>
         <p style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-muted-strong)", textAlign: "center", marginTop: 8 }}>

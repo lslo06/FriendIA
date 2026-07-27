@@ -1,8 +1,9 @@
 import {
   Calendar, MessageCircle, BookOpen, BarChart2, FileText, Shield,
-  ArrowRight, MapPin, Mail, Instagram, ChevronRight, Smartphone, Bell
+  ArrowRight, MapPin, Mail, Instagram, ChevronRight, Smartphone, Bell, Loader2
 } from "lucide-react";
 import { Logo } from "./Logo";
+import { joinMobileWaitlist } from "@/lib/waitlist";
 import controlarIcon from '../../assets/controlar.png';
 import directorioIcon from '../../assets/directorio.png';
 import graficoIcon from '../../assets/grafico-pastel-alt.png';
@@ -98,10 +99,28 @@ const testimonials = [
 function MobileAppSection() {
   const [notified, setNotified] = useState(false);
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleNotify(e: React.FormEvent) {
+  async function handleNotify(e: React.FormEvent) {
     e.preventDefault();
-    if (email.trim()) { setNotified(true); setEmail(""); }
+    if (!email.trim() || isSubmitting) return;
+
+    setError("");
+    setIsSubmitting(true);
+    try {
+      await joinMobileWaitlist(email);
+      setNotified(true);
+      setEmail("");
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "No pudimos registrar tu correo. Intenta de nuevo."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -165,6 +184,9 @@ function MobileAppSection() {
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    disabled={isSubmitting}
                     placeholder="tu@correo.com"
                     className="flex-1 px-4 py-2.5 rounded-xl outline-none"
                     style={{ background: "#0F1825", border: "1px solid rgba(255,255,255,0.1)", color: "#E2E8F0", fontSize: 13 }}
@@ -173,12 +195,28 @@ function MobileAppSection() {
                   />
                   <button
                     type="submit"
+                    disabled={isSubmitting}
                     className="px-5 py-2.5 rounded-xl transition-all"
-                    style={{ background: "#5B88B2", color: "#fff", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap" }}
+                    style={{ background: "#5B88B2", color: "#fff", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", opacity: isSubmitting ? 0.7 : 1 }}
                     onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "#4a76a0")}
                     onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "#5B88B2")}
-                  >Notificarme</button>
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 size={14} className="animate-spin" />
+                        Guardando…
+                      </span>
+                    ) : "Notificarme"}
+                  </button>
                 </div>
+                {error && (
+                  <p role="alert" style={{ color: "#E24B4A", fontSize: 12, marginTop: 8 }}>
+                    {error}
+                  </p>
+                )}
+                <p style={{ color: "#64748B", fontSize: 11, marginTop: 8 }}>
+                  Usaremos tu correo únicamente para avisarte del lanzamiento.
+                </p>
               </form>
             ) : (
               <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: "rgba(76,217,100,0.1)", border: "1px solid rgba(76,217,100,0.25)" }}>

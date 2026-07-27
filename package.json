@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "node scripts/dev.cjs",
+    "dev:frontend": "vite",
+    "dev:backend": "npm --prefix backend run dev",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run build && npm --prefix backend test"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -87,9 +91,5 @@
       "optional": true
     }
   },
-  "pnpm": {
-    "overrides": {
-      "vite": "6.3.5"
-    }
-  }
+  "packageManager": "pnpm@11.2.2"
 }
