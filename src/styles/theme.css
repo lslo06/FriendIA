@@ -232,3 +232,51 @@ html[data-friendia-theme="light"] {
   color: var(--app-text);
   transition: background-color 180ms ease, color 180ms ease;
 }
+
+/* Microinteracciones compartidas: sutiles, rápidas y coherentes. */
+.friendia-app button,
+.friendia-app a,
+.friendia-app [role="button"] {
+  transition:
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.friendia-app button:not(:disabled):hover,
+.friendia-app a:hover,
+.friendia-app [role="button"]:hover {
+  transform: translateY(-1px);
+}
+
+.friendia-app button:not(:disabled):active,
+.friendia-app a:active,
+.friendia-app [role="button"]:active {
+  transform: translateY(0) scale(0.975);
+}
+
+.friendia-app button:focus-visible,
+.friendia-app a:focus-visible,
+.friendia-app [role="button"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(91, 136, 178, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .friendia-app button,
+  .friendia-app a,
+  .friendia-app [role="button"] {
+    transform: none !important;
+  }
+}

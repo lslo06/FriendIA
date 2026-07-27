@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDisplayName, saveSurveyProfile } from "@/lib/profiles";
@@ -29,6 +30,7 @@ function isPasswordSetupFlow() {
 }
 
 export default function App() {
+  const reduceMotion = useReducedMotion();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const [screen, setScreen] = useState<AppScreen>("landing");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
@@ -173,14 +175,36 @@ export default function App() {
         onLogout={handleLogout}
       />
       <main className="flex-1 flex flex-col overflow-hidden">
-        {renderTab()}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            className="flex-1 min-h-0 flex flex-col"
+            initial={reduceMotion ? false : { opacity: 0, y: 10, filter: "blur(3px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
+            transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {renderTab()}
+          </motion.div>
+        </AnimatePresence>
       </main>
-      {showEmergency && (
-        <EmergencyModal
-          onClose={() => setShowEmergency(false)}
-          onGoToHelp={() => { setShowEmergency(false); setActiveTab("help"); }}
-        />
-      )}
+      <AnimatePresence>
+        {showEmergency && (
+          <motion.div
+            key="emergency"
+            className="fixed inset-0 z-50"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.18 }}
+          >
+            <EmergencyModal
+              onClose={() => setShowEmergency(false)}
+              onGoToHelp={() => { setShowEmergency(false); setActiveTab("help"); }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, AlertTriangle, Clock, Wind, Anchor, Loader2, History, Plus, X } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import logoImg from "@/assets/logo.png";
 import { getChatMessages, listChatSessions, requestChatReply, type ChatApiMessage, type ChatSession } from "@/lib/chat";
 
@@ -55,6 +56,7 @@ function createInitialMessages(userName: string): Message[] {
 const SESSION_WARN_MIN = 30;
 
 export function Chat({ userName, onEmergency }: ChatProps) {
+  const reduceMotion = useReducedMotion();
   const [messages, setMessages] = useState<Message[]>(() => createInitialMessages(userName));
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -323,12 +325,19 @@ export function Chat({ userName, onEmergency }: ChatProps) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
+        <AnimatePresence initial={false}>
         {messages.map(msg => {
           if (msg.from === "system") return null;
           const isBot = msg.from === "bot";
           const isGrounding = msg.type === "grounding";
           return (
-            <div key={msg.id} className={`flex ${!isBot ? "justify-end" : "justify-start"}`}>
+            <motion.div
+              key={msg.id}
+              className={`flex ${!isBot ? "justify-end" : "justify-start"}`}
+              initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
+            >
               <div style={{ maxWidth: "70%" }}>
                 <div
                   className="px-4 py-3 rounded-2xl"
@@ -354,9 +363,10 @@ export function Chat({ userName, onEmergency }: ChatProps) {
                 </div>
                 <p style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-text-muted)", marginTop: 4, textAlign: !isBot ? "right" : "left" }}>{msg.time}</p>
               </div>
-            </div>
+            </motion.div>
           );
         })}
+        </AnimatePresence>
 
         {/* Grounding card */}
         {showGrounding && (
