@@ -131,7 +131,7 @@ async function findOrCreateSession(profileId, requestedSessionId, firstMessage) 
     .from('sesiones_chat')
     .insert({
       id_perfil: profileId,
-      nombre_sesion: firstMessage.slice(0, 60),
+      nombre_sesion: firstMessage.replace(/\s+/g, ' ').trim().slice(0, 60),
     })
     .select('id_sesion_chat')
     .single();

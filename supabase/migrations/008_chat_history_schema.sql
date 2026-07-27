@@ -14,6 +14,30 @@ FROM "Group_By".sesiones_chat AS sesion
 WHERE mensaje.id_sesion_chat = sesion.id_sesion_chat
   AND mensaje.id_perfil IS NULL;
 
+-- Asigna nombre también a las conversaciones creadas antes de esta migración.
+-- Usa el primer mensaje del usuario, igual que hace el backend para chats nuevos.
+UPDATE "Group_By".sesiones_chat AS sesion
+SET nombre_sesion = LEFT(
+  TRIM(
+    (
+      SELECT mensaje.contenido
+      FROM "Group_By".mensajes_chat AS mensaje
+      WHERE mensaje.id_sesion_chat = sesion.id_sesion_chat
+        AND mensaje.rol = 'user'
+      ORDER BY mensaje.creado_en ASC
+      LIMIT 1
+    )
+  ),
+  60
+)
+WHERE (sesion.nombre_sesion IS NULL OR TRIM(sesion.nombre_sesion) = '')
+  AND EXISTS (
+    SELECT 1
+    FROM "Group_By".mensajes_chat AS mensaje
+    WHERE mensaje.id_sesion_chat = sesion.id_sesion_chat
+      AND mensaje.rol = 'user'
+  );
+
 ALTER TABLE "Group_By".mensajes_chat
   ALTER COLUMN id_perfil SET NOT NULL;
 
