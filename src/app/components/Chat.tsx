@@ -544,13 +544,6 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
-              {isBot && (
-                <img
-                  src={isGrounding ? emotionIcons.calm : emotionIcons.support}
-                  alt=""
-                  className="h-8 w-8 object-contain mr-2 mt-1 flex-shrink-0"
-                />
-              )}
               <div style={{ maxWidth: "70%" }}>
                 <div
                   className="px-4 py-3 rounded-2xl"
