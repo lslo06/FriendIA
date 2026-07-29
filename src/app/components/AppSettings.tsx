@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronRight, Loader2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -18,6 +18,8 @@ interface AppSettingsProps {
 export function AppSettings({ userId, onLogout }: AppSettingsProps) {
   const { settings, updateSettings } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"history" | "account" | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const darkMode = settings?.modo_oscuro ?? true;
   const fontSize = normalizeFontSize(
     settings?.tamano_fuente ?? DEFAULT_SETTINGS.tamano_fuente
@@ -91,28 +93,109 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
   }
 
   async function handleDeleteHistory() {
-    if (!confirm("¿Estás seguro de que quieres borrar todo tu historial de chat? Esta acción no se puede deshacer.")) return;
+    if (deleting) return;
+    setDeleting(true);
     try {
       await deleteChatHistory(userId);
       toast.success("Historial de chat eliminado");
-    } catch {
+      setConfirmAction(null);
+    } catch (error) {
+      console.error("Error eliminando el historial:", error);
       toast.error("No se pudo eliminar el historial");
+    } finally {
+      setDeleting(false);
     }
   }
 
   async function handleDeleteAccount() {
-    if (!confirm("¿Estás seguro de que quieres eliminar tu cuenta? Se borrarán todos tus datos permanentemente.")) return;
+    if (deleting) return;
+    setDeleting(true);
     try {
       await deleteAccount();
       toast.success("Cuenta eliminada");
       onLogout();
-    } catch {
+    } catch (error) {
+      console.error("Error eliminando la cuenta:", error);
       toast.error("No se pudo eliminar la cuenta");
+      setDeleting(false);
     }
   }
 
+  const deletingAccount = confirmAction === "account";
+
   return (
-    <div className="flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
+    <div className="relative flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(4,9,15,.76)", backdropFilter: "blur(8px)" }}
+          onClick={() => !deleting && setConfirmAction(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl overflow-hidden"
+            style={{
+              background: "var(--app-surface)",
+              border: "1px solid rgba(226,75,74,.32)",
+              boxShadow: "0 24px 80px rgba(0,0,0,.42)",
+            }}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="settings-confirm-title"
+            aria-describedby="settings-confirm-description"
+            onClick={event => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 p-6 pb-4">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-2xl" style={{ background: "rgba(226,75,74,.12)", color: "#E24B4A" }}>
+                  {deletingAccount ? <AlertTriangle size={24} /> : <Trash2 size={24} />}
+                </div>
+                <div>
+                  <h2 id="settings-confirm-title" style={{ color: "var(--app-text)", fontSize: 19, fontWeight: 700 }}>
+                    {deletingAccount ? "¿Eliminar tu cuenta?" : "¿Borrar el historial?"}
+                  </h2>
+                  <p id="settings-confirm-description" className="mt-2" style={{ color: "var(--app-text-muted)", fontSize: 14, lineHeight: 1.6 }}>
+                    {deletingAccount
+                      ? "Se eliminarán permanentemente tu perfil, diario, conversaciones y configuraciones. Esta acción no se puede deshacer."
+                      : "Se borrarán todos los mensajes de tus conversaciones. Esta acción no se puede deshacer."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setConfirmAction(null)}
+                disabled={deleting}
+                aria-label="Cerrar confirmación"
+                className="p-2 rounded-xl flex-shrink-0"
+                style={{ background: "var(--app-surface-alt)", border: 0, color: "var(--app-text-muted)" }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-3 px-6 py-5" style={{ borderTop: "1px solid var(--app-border)" }}>
+              <button
+                type="button"
+                onClick={() => setConfirmAction(null)}
+                disabled={deleting}
+                className="px-4 py-2.5 rounded-xl"
+                style={{ background: "var(--app-surface-alt)", border: "1px solid var(--app-border)", color: "var(--app-text)", fontWeight: 600 }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void (deletingAccount ? handleDeleteAccount() : handleDeleteHistory())}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                style={{ background: "#E24B4A", border: 0, color: "#fff", fontWeight: 700, opacity: deleting ? .65 : 1 }}
+              >
+                {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                {deletingAccount ? "Eliminar cuenta" : "Borrar historial"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <h1 style={{ fontSize: "calc(24px * var(--app-font-scale))", fontWeight: 700, color: "var(--app-text)", marginBottom: 24 }}>Configuración</h1>
 
       <Section label="Apariencia">
@@ -173,7 +256,7 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
         <Row
           label="Borrar todo mi historial"
           danger
-          onClick={handleDeleteHistory}
+          onClick={() => setConfirmAction("history")}
           control={<ChevronRight size={16} color="#E24B4A" />}
         />
       </Section>
@@ -187,7 +270,7 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
         <Row
           label="Eliminar cuenta"
           danger
-          onClick={handleDeleteAccount}
+          onClick={() => setConfirmAction("account")}
           control={<ChevronRight size={16} color="#E24B4A" />}
         />
       </Section>
