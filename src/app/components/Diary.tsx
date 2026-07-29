@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Plus, ChevronRight, Loader2, X, Pencil, Save, Maximize2 } from "lucide-react";
+import { Plus, ChevronRight, Loader2, X, Pencil, Save, Maximize2, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
   createDiaryEntry,
+  deleteDiaryEntry,
   fetchDiaryEntries,
   filterEntries,
   formatEntryDate,
@@ -31,6 +32,8 @@ export function Diary({ userId }: DiaryProps) {
   const [editText, setEditText] = useState("");
   const [editMood, setEditMood] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -78,12 +81,14 @@ export function Diary({ userId }: DiaryProps) {
     setEditText(entry.text);
     setEditMood(entry.mood ?? "");
     setEditingEntry(false);
+    setShowDeleteConfirm(false);
   }
 
   function closeEntry() {
-    if (savingEdit) return;
+    if (savingEdit || deleting) return;
     setSelectedEntry(null);
     setEditingEntry(false);
+    setShowDeleteConfirm(false);
   }
 
   async function handleUpdate() {
@@ -106,6 +111,24 @@ export function Diary({ userId }: DiaryProps) {
     }
   }
 
+  async function handleDelete() {
+    if (!selectedEntry || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteDiaryEntry(userId, selectedEntry.id);
+      setEntries(current => current.filter(entry => entry.id !== selectedEntry.id));
+      setShowDeleteConfirm(false);
+      setSelectedEntry(null);
+      setEditingEntry(false);
+      toast.success("Entrada eliminada");
+    } catch (error) {
+      console.error("Error eliminando la entrada:", error);
+      toast.error("No se pudo eliminar la entrada");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const filtered = filterEntries(entries, filter);
 
   if (loading) {
@@ -125,7 +148,7 @@ export function Diary({ userId }: DiaryProps) {
           onClick={closeEntry}
         >
           <div
-            className="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-3xl overflow-hidden"
+            className="relative w-full max-w-3xl max-h-[88vh] flex flex-col rounded-3xl overflow-hidden"
             style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)", boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}
             onClick={event => event.stopPropagation()}
             role="dialog"
@@ -142,13 +165,22 @@ export function Diary({ userId }: DiaryProps) {
               </div>
               <div className="flex items-center gap-2">
                 {!editingEntry && (
-                  <button
-                    onClick={() => setEditingEntry(true)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl"
-                    style={{ background: "var(--app-surface-alt)", color: "var(--app-text)", border: "1px solid var(--app-border)" }}
-                  >
-                    <Pencil size={15} /> Editar
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setEditingEntry(true)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                      style={{ background: "var(--app-surface-alt)", color: "var(--app-text)", border: "1px solid var(--app-border)" }}
+                    >
+                      <Pencil size={15} /> Editar
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                      style={{ background: "rgba(226,75,74,.1)", color: "#E24B4A", border: "1px solid rgba(226,75,74,.25)" }}
+                    >
+                      <Trash2 size={15} /> Borrar
+                    </button>
+                  </>
                 )}
                 <button onClick={closeEntry} aria-label="Cerrar entrada" className="p-2 rounded-xl" style={{ background: "none", color: "var(--app-text-muted)", border: 0 }}>
                   <X size={20} />
@@ -205,6 +237,57 @@ export function Diary({ userId }: DiaryProps) {
                   {savingEdit ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
                   Guardar cambios
                 </button>
+              </div>
+            )}
+
+            {showDeleteConfirm && (
+              <div
+                className="absolute inset-0 z-10 flex items-center justify-center p-4"
+                style={{ background: "rgba(4,9,15,.78)", backdropFilter: "blur(6px)" }}
+                onClick={() => !deleting && setShowDeleteConfirm(false)}
+              >
+                <div
+                  className="w-full max-w-md rounded-2xl p-6"
+                  style={{ background: "var(--app-surface)", border: "1px solid rgba(226,75,74,.35)", boxShadow: "0 18px 60px rgba(0,0,0,.4)" }}
+                  onClick={event => event.stopPropagation()}
+                  role="alertdialog"
+                  aria-modal="true"
+                  aria-labelledby="delete-diary-title"
+                  aria-describedby="delete-diary-description"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl" style={{ background: "rgba(226,75,74,.12)", color: "#E24B4A" }}>
+                      <AlertTriangle size={22} />
+                    </div>
+                    <div>
+                      <h3 id="delete-diary-title" style={{ color: "var(--app-text)", fontSize: 18, fontWeight: 700 }}>
+                        ¿Borrar esta entrada?
+                      </h3>
+                      <p id="delete-diary-description" className="mt-1" style={{ color: "var(--app-text-muted)", fontSize: 14, lineHeight: 1.55 }}>
+                        Esta acción es permanente y la nota no se podrá recuperar.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3 mt-6">
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      disabled={deleting}
+                      className="px-4 py-2.5 rounded-xl"
+                      style={{ background: "var(--app-surface-alt)", color: "var(--app-text)", border: "1px solid var(--app-border)" }}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => void handleDelete()}
+                      disabled={deleting}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                      style={{ background: "#E24B4A", color: "#fff", border: 0, opacity: deleting ? .65 : 1, fontWeight: 700 }}
+                    >
+                      {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                      Borrar definitivamente
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -167,6 +167,23 @@ export async function updateDiaryEntry(
   return mapDiaryEntry(data as DiaryRow);
 }
 
+export async function deleteDiaryEntry(
+  userId: string,
+  entryId: string
+): Promise<void> {
+  const profileId = await getProfileId(userId);
+  if (!profileId) throw new Error("Perfil no encontrado");
+
+  const { error } = await supabase
+    .schema("Group_By")
+    .from("entradas_diario")
+    .delete()
+    .eq("id_entrada_diario", entryId)
+    .eq("id_perfil", profileId);
+
+  if (error) throw error;
+}
+
 export function filterEntries(
   entries: DiaryEntry[],
   filter: "todos" | "semana" | "mes"
