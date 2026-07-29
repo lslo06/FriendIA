@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 tmp/
+tmp-dev-*.log
 
 # La app Android vive en C:\Moviles\FriendIA-Android
 mobile/

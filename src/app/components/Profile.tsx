@@ -19,6 +19,7 @@ import {
 } from "@/lib/profiles";
 import type { UserProfile } from "@/lib/types";
 import { computeDiaryStats, fetchDiaryEntries } from "@/lib/diary";
+import { emotionIcons } from "@/lib/emotionIcons";
 
 interface ProfileProps {
   userId: string;
@@ -472,7 +473,7 @@ export function Profile({
             ["Entradas", String(stats.totalEntries), "#4CD964"],
             [
               "Racha",
-              stats.currentStreak > 0 ? `${stats.currentStreak} 🔥` : "0",
+              String(stats.currentStreak),
               "#F5A623",
             ],
           ].map(([label, value, color]) => (
@@ -493,7 +494,8 @@ export function Profile({
               >
                 {label}
               </p>
-              <p
+              <div
+                className="flex items-center gap-2"
                 style={{
                   fontSize: "calc(24px * var(--app-font-scale))",
                   fontWeight: 700,
@@ -501,7 +503,10 @@ export function Profile({
                 }}
               >
                 {value}
-              </p>
+                {label === "Racha" && stats.currentStreak > 0 && (
+                  <img src={emotionIcons.streak} alt="Racha activa" className="h-9 w-9 object-contain" />
+                )}
+              </div>
             </div>
           ))}
         </div>

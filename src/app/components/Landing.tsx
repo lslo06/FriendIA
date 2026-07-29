@@ -14,6 +14,7 @@ import siguiendoIcon from '../../assets/siguiendo.png';
 import velaLotoYogaIcon from '../../assets/vela-de-loto-yoga.png';
 import { useState } from "react";
 import { motion } from "motion/react";
+import { emotionIcons } from "@/lib/emotionIcons";
 // Minimal SVG QR placeholder — replace innerContent with real QR when app is live
 function QRPlaceholder() {
   return (
@@ -220,7 +221,7 @@ function MobileAppSection() {
               </form>
             ) : (
               <div className="flex items-center gap-2 px-4 py-3 rounded-xl" style={{ background: "rgba(76,217,100,0.1)", border: "1px solid rgba(76,217,100,0.25)" }}>
-                <span style={{ fontSize: 16 }}>✅</span>
+                <img src={emotionIcons.celebration} alt="" className="h-8 w-8 object-contain" />
                 <p style={{ fontSize: 13, color: "#4CD964" }}>¡Listo! Te avisamos cuando la app esté disponible.</p>
               </div>
             )}
@@ -482,7 +483,10 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       <section id="testimonials" className="py-20 px-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
-            <span style={{ fontSize: 12, color: "#5B88B2", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Pacientes</span>
+            <span className="inline-flex items-center gap-2" style={{ fontSize: 12, color: "#5B88B2", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>
+              <img src={emotionIcons.group} alt="" className="h-8 w-8 object-contain" />
+              Pacientes
+            </span>
             <h2 style={{ fontSize: 36, fontWeight: 700, color: "#E2E8F0", marginTop: 8 }}>Lo que dicen quienes la usan</h2>
           </div>
           <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>

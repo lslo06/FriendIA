@@ -10,6 +10,7 @@ import {
   isEmotionFromToday,
 } from "@/lib/emotions";
 import type { EmotionRecord } from "@/lib/types";
+import { emotionIcons, getEmotionIcon } from "@/lib/emotionIcons";
 
 interface Message {
   id: number;
@@ -37,17 +38,17 @@ const groundingTechniques = [
   {
     title: "Técnica 5-4-3-2-1",
     desc: "Nombra 5 cosas que puedes VER, 4 que puedes TOCAR, 3 que puedes ESCUCHAR, 2 que puedes OLER y 1 que puedes SABOREAR. Esto ancla tu mente al momento presente.",
-    icon: "🌿"
+    icon: emotionIcons.calm
   },
   {
     title: "Respiración cuadrada",
     desc: "Inhala contando 4 segundos → sostén 4 segundos → exhala 4 segundos → sostén 4 segundos. Repite 4 veces. Tu sistema nervioso lo agradecerá.",
-    icon: "🌬️"
+    icon: emotionIcons.breathing
   },
   {
     title: "Anclaje físico",
     desc: "Coloca ambos pies en el suelo. Siente el contacto. Aprieta suavemente los puños y suéltalos. Nota cómo tu cuerpo está aquí, ahora, seguro.",
-    icon: "⚓"
+    icon: emotionIcons.anchor
   }
 ];
 
@@ -60,8 +61,8 @@ function createInitialMessages(userName: string, emotion?: EmotionRecord | null)
     id: 1,
     from: "bot",
     text: mood
-      ? `Hola${name ? `, ${name}` : ""}. Hoy registraste que te sientes ${mood}. Podemos partir de ahí, aunque también está bien si tu estado ya cambió. ¿Qué te gustaría contarme? 💙`
-      : `Hola${name ? `, ${name}` : ""}. Antes de conversar, cuéntame cómo te sientes hoy. 💙`,
+      ? `Hola${name ? `, ${name}` : ""}. Hoy registraste que te sientes ${mood}. Podemos partir de ahí, aunque también está bien si tu estado ya cambió. ¿Qué te gustaría contarme?`
+      : `Hola${name ? `, ${name}` : ""}. Antes de conversar, cuéntame cómo te sientes hoy.`,
     time: now(),
   }];
 }
@@ -282,7 +283,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
       const botMsg: Message = {
         id: Date.now() + 1,
         from: "bot",
-        text: "He notado que llevamos un rato en pensamientos que se repiten y eso puede ser agotador. A veces es útil hacer una pequeña pausa para anclar la mente al momento presente antes de continuar. ¿Te gustaría intentar una técnica breve de regulación? 🌿",
+        text: "He notado que llevamos un rato en pensamientos que se repiten y eso puede ser agotador. A veces es útil hacer una pequeña pausa para anclar la mente al momento presente antes de continuar. ¿Te gustaría intentar una técnica breve de regulación?",
         time: now(),
         type: "grounding",
       };
@@ -466,7 +467,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
                       color: "var(--app-text)",
                     }}
                   >
-                    <span>{option.emoji}</span>
+                    <img src={getEmotionIcon(option.core) ?? ""} alt="" className="h-9 w-9 object-contain" />
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{option.core}</span>
                   </button>
                 ))}
@@ -543,6 +544,13 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
+              {isBot && (
+                <img
+                  src={isGrounding ? emotionIcons.calm : emotionIcons.support}
+                  alt=""
+                  className="h-8 w-8 object-contain mr-2 mt-1 flex-shrink-0"
+                />
+              )}
               <div style={{ maxWidth: "70%" }}>
                 <div
                   className="px-4 py-3 rounded-2xl"
@@ -578,14 +586,17 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
           <div className="p-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid rgba(76,217,100,0.25)" }}>
             <div className="flex items-center gap-2 mb-2">
               <Anchor size={14} color="#4CD964" />
-              <span style={{ fontSize: "calc(13px * var(--app-font-scale))", fontWeight: 600, color: "#4CD964" }}>{gt.title} {gt.icon}</span>
+              <span className="flex items-center gap-2" style={{ fontSize: "calc(13px * var(--app-font-scale))", fontWeight: 600, color: "#4CD964" }}>
+                <img src={gt.icon} alt="" className="h-8 w-8 object-contain" />
+                {gt.title}
+              </span>
             </div>
             <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", lineHeight: 1.6, marginBottom: 12 }}>{gt.desc}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => {
                   setShowGrounding(false);
-                  const resumeMsg: Message = { id: Date.now(), from: "bot", text: "Cuando te sientas listo/a, seguimos. Estoy aquí. 💙", time: now() };
+                  const resumeMsg: Message = { id: Date.now(), from: "bot", text: "Cuando te sientas listo/a, seguimos. Estoy aquí.", time: now() };
                   setMessages(m => [...m, resumeMsg]);
                 }}
                 className="px-4 py-2 rounded-xl text-sm transition-all"

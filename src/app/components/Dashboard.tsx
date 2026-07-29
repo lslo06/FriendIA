@@ -15,9 +15,7 @@ import {
   isEmotionFromToday,
 } from "@/lib/emotions";
 import type { DiaryEntry, EmotionRecord } from "@/lib/types";
-
-// Importamos únicamente el asset del fuego para la racha
-import fuegoImg from "@/assets/fuego.png";
+import { emotionIcons, getEmotionIcon } from "@/lib/emotionIcons";
 
 interface DashboardProps {
   userId: string;
@@ -28,27 +26,27 @@ interface DashboardProps {
 
 const emotionWheel = [
   {
-    core: "Alegría", color: "#4CD964", emoji: "😊",
+    core: "Alegría", color: "#4CD964",
     nuances: ["Gratitud", "Satisfacción", "Esperanza", "Entusiasmo", "Serenidad"]
   },
   {
-    core: "Tristeza", color: "#5B88B2", emoji: "😢",
+    core: "Tristeza", color: "#5B88B2",
     nuances: ["Melancolía", "Nostalgia", "Soledad", "Decepción", "Duelo"]
   },
   {
-    core: "Ansiedad", color: "#F5A623", emoji: "😰",
+    core: "Ansiedad", color: "#F5A623",
     nuances: ["Preocupación", "Nerviosismo", "Tensión", "Inseguridad", "Miedo"]
   },
   {
-    core: "Enojo", color: "#E24B4A", emoji: "😤",
+    core: "Enojo", color: "#E24B4A",
     nuances: ["Frustración", "Irritación", "Indignación", "Resentimiento", "Impaciencia"]
   },
   {
-    core: "Calma", color: "#A78BFA", emoji: "🧘",
+    core: "Calma", color: "#A78BFA",
     nuances: ["Paz", "Aceptación", "Equilibrio", "Claridad", "Descanso"]
   },
   {
-    core: "Agotamiento", color: "var(--app-text-muted)", emoji: "😴",
+    core: "Agotamiento", color: "var(--app-text-muted)",
     nuances: ["Cansancio físico", "Saturación mental", "Desmotivación", "Vacío", "Apatía"]
   },
 ];
@@ -158,7 +156,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
               {stats.currentStreak}
             </span>
             {stats.currentStreak > 0 && (
-              <img src={fuegoImg} alt="Fuego" className="w-7 h-7 object-contain" />
+              <img src={emotionIcons.streak} alt="Racha activa" className="w-9 h-9 object-contain" />
             )}
           </div>
         </div>
@@ -193,7 +191,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
             <>
               <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 12, lineHeight: 1.5 }}>¿Cuál de estas emociones se acerca más a cómo te sientes?</p>
               <div className="grid grid-cols-3 gap-2">
-                {emotionWheel.map(({ core, color, emoji }) => (
+                {emotionWheel.map(({ core, color }) => (
                   <button
                     key={core}
                     onClick={() => { setSelectedCore(core); setSelectedNuance(null); }}
@@ -202,7 +200,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
                     onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = color)}
                     onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "var(--app-border)")}
                   >
-                    <span style={{ fontSize: "calc(20px * var(--app-font-scale))", fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}>{emoji}</span>
+                    <img src={getEmotionIcon(core) ?? ""} alt="" className="h-10 w-10 object-contain" />
                     <span style={{ fontSize: "calc(11px * var(--app-font-scale))", color, fontWeight: 600 }}>{core}</span>
                   </button>
                 ))}
@@ -214,7 +212,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
                 <button onClick={() => { setSelectedCore(null); setSelectedNuance(null); }}
                   style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>← Cambiar</button>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: `${selectedEmotion!.color}18`, border: `1px solid ${selectedEmotion!.color}40` }}>
-                  <span style={{ fontSize: "calc(14px * var(--app-font-scale))", fontFamily: "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" }}>{selectedEmotion!.emoji}</span>
+                  <img src={getEmotionIcon(selectedCore) ?? ""} alt="" className="h-6 w-6 object-contain" />
                   <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: selectedEmotion!.color, fontWeight: 600 }}>{selectedCore}</span>
                 </div>
               </div>

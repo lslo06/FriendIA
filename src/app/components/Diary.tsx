@@ -12,6 +12,7 @@ import {
   updateDiaryEntry,
 } from "@/lib/diary";
 import type { DiaryEntry } from "@/lib/types";
+import { getEmotionIcon } from "@/lib/emotionIcons";
 
 type Filter = "todos" | "semana" | "mes";
 
@@ -130,6 +131,7 @@ export function Diary({ userId }: DiaryProps) {
   }
 
   const filtered = filterEntries(entries, filter);
+  const selectedEntryIcon = getEmotionIcon(selectedEntry?.tag) ?? getEmotionIcon(selectedEntry?.mood);
 
   if (loading) {
     return (
@@ -158,7 +160,7 @@ export function Diary({ userId }: DiaryProps) {
             <div className="flex items-center justify-between gap-4 px-6 py-4" style={{ borderBottom: "1px solid var(--app-border)" }}>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  {selectedEntry.mood && <span>{selectedEntry.mood}</span>}
+                  {selectedEntryIcon && <img src={selectedEntryIcon} alt="" className="h-8 w-8 object-contain" />}
                   <h2 style={{ color: "var(--app-text)", fontSize: 18, fontWeight: 700 }}>Entrada del diario</h2>
                 </div>
                 <p style={{ color: "var(--app-text-muted)", fontSize: 12 }}>{formatEntryDate(selectedEntry.created_at)}</p>
@@ -200,10 +202,10 @@ export function Diary({ userId }: DiaryProps) {
                         title={label}
                         aria-label={label}
                         onClick={() => setEditMood(emoji)}
-                        className="text-xl p-2 rounded-xl"
+                        className="p-2 rounded-xl"
                         style={{ background: editMood === emoji ? "rgba(91,136,178,0.2)" : "var(--app-surface-alt)", border: editMood === emoji ? "1px solid #5B88B2" : "1px solid transparent" }}
                       >
-                        {emoji}
+                        <img src={getEmotionIcon(label) ?? ""} alt="" className="h-8 w-8 object-contain" />
                       </button>
                     ))}
                   </div>
@@ -317,7 +319,7 @@ export function Diary({ userId }: DiaryProps) {
                 onClick={() => setNewMood(emoji)}
                 className="text-xl p-2 rounded-xl transition-all"
                 style={{ background: newMood === emoji ? "rgba(91,136,178,0.2)" : "var(--app-surface-alt)", border: newMood === emoji ? "1px solid #5B88B2" : "1px solid transparent" }}
-              >{emoji}</button>
+              ><img src={getEmotionIcon(label) ?? ""} alt="" className="h-8 w-8 object-contain" /></button>
             ))}
           </div>
           <textarea
@@ -385,7 +387,9 @@ export function Diary({ userId }: DiaryProps) {
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="flex items-center gap-2 mb-1">
-                    {entry.mood && <span style={{ fontSize: "calc(14px * var(--app-font-scale))" }}>{entry.mood}</span>}
+                    {(getEmotionIcon(entry.tag) ?? getEmotionIcon(entry.mood)) && (
+                      <img src={(getEmotionIcon(entry.tag) ?? getEmotionIcon(entry.mood))!} alt="" className="h-6 w-6 object-contain" />
+                    )}
                     <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)" }}>{formatEntryDate(entry.created_at)}</span>
                     {entry.tag && (
                       <span className="px-2 py-0.5 rounded-full" style={{ fontSize: "calc(11px * var(--app-font-scale))", background: `${tagColor}22`, color: tagColor, fontWeight: 600 }}>{entry.tag}</span>

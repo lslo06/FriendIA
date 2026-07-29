@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import type { UserProfile } from "@/lib/types";
 import { Logo } from "./Logo";
+import { emotionIcons } from "@/lib/emotionIcons";
 
 interface SurveyProps {
   userName: string;
@@ -33,17 +34,17 @@ const concerns = [
 
 const tones = [
   {
-    emoji: "🤗",
+    icon: emotionIcons.support,
     label: "Cálido y amistoso",
     desc: "Como hablar con un amigo cercano",
   },
   {
-    emoji: "🧘",
+    icon: emotionIcons.calm,
     label: "Calmado y neutro",
     desc: "Reflexivo y sin juicios",
   },
   {
-    emoji: "💪",
+    icon: emotionIcons.strength,
     label: "Motivador",
     desc: "Te impulsa a seguir adelante",
   },
@@ -590,7 +591,7 @@ export function Survey({
             </p>
 
             <div className="flex flex-col gap-4">
-              {tones.map(({ emoji, label, desc }) => (
+              {tones.map(({ icon, label, desc }) => (
                 <button
                   key={label}
                   onClick={() =>
@@ -609,9 +610,7 @@ export function Survey({
                     }`,
                   }}
                 >
-                  <span style={{ fontSize: 28 }}>
-                    {emoji}
-                  </span>
+                  <img src={icon} alt="" className="h-12 w-12 object-contain" />
 
                   <div>
                     <p
@@ -767,9 +766,12 @@ export function Survey({
                     "#5B88B2")
                 }
               >
-                {step === totalSteps
-                  ? "Comenzar 🎉"
-                  : "Siguiente"}
+                {step === totalSteps ? (
+                  <span className="flex items-center gap-2">
+                    Comenzar
+                    <img src={emotionIcons.celebration} alt="" className="h-6 w-6 object-contain" />
+                  </span>
+                ) : "Siguiente"}
               </button>
             </div>
           </div>
