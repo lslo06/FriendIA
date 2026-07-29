@@ -71,7 +71,7 @@ function isMissingColumn(error, columnName) {
 }
 
 async function loadPersonalization(profileId) {
-  const [profileResult, disabilityResult, settingsResult] = await Promise.all([
+  const [profileResult, disabilityResult, settingsResult, emotionResult] = await Promise.all([
     supabase
       .schema('Group_By')
       .from('perfiles')
@@ -90,6 +90,15 @@ async function loadPersonalization(profileId) {
       .select('guardar_historial_chat')
       .eq('id_perfil', profileId)
       .maybeSingle(),
+    supabase
+      .schema('Group_By')
+      .from('registros_emociones')
+      .select('fecha_registro,etiqueta_animo,etiquetas_emociones,notas')
+      .eq('id_perfil', profileId)
+      .order('fecha_registro', { ascending: false })
+      .order('creado_en', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (profileResult.error) throw profileResult.error;
@@ -100,6 +109,9 @@ async function loadPersonalization(profileId) {
   if (settingsResult.error) {
     console.warn('No se pudo cargar la preferencia de historial del chat');
   }
+  if (emotionResult.error) {
+    console.warn('No se pudo cargar el check-in emocional para personalizar el chat');
+  }
 
   const relation = disabilityResult.data?.tipo_discapacidad;
   const disabilityType = Array.isArray(relation) ? relation[0] : relation;
@@ -107,6 +119,7 @@ async function loadPersonalization(profileId) {
   return {
     profile: profileResult.data,
     disability: disabilityType?.nombre || null,
+    currentEmotion: emotionResult.error ? null : emotionResult.data,
     saveHistory: settingsResult.error
       ? false
       : Boolean(settingsResult.data?.guardar_historial_chat),
@@ -341,6 +354,7 @@ router.post('/', async (req, res) => {
         profile: personalization.profile,
         disability: personalization.disability,
         memories,
+        currentEmotion: personalization.currentEmotion,
       });
 
     let sessionId = null;

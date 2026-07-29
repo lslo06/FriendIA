@@ -94,7 +94,13 @@ export default function App() {
           />
         );
       case "chat":
-        return <Chat userName={userName} onEmergency={() => setShowEmergency(true)} />;
+        return (
+          <Chat
+            userId={user.id}
+            userName={userName}
+            onEmergency={() => setShowEmergency(true)}
+          />
+        );
       case "diary":
         return <Diary userId={user.id} />;
       case "help":

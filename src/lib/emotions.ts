@@ -17,6 +17,15 @@ export const EMOTION_COLORS: Record<string, string> = {
   Agotamiento: "#94A3B8",
 };
 
+export const EMOTION_CHECKIN_OPTIONS = [
+  { core: "Alegría", color: "#4CD964", emoji: "😊", nuances: ["Entusiasmo", "Gratitud", "Esperanza", "Diversión", "Satisfacción"] },
+  { core: "Tristeza", color: "#5B88B2", emoji: "😔", nuances: ["Soledad", "Nostalgia", "Desánimo", "Decepción", "Vulnerabilidad"] },
+  { core: "Ansiedad", color: "#F5A623", emoji: "😰", nuances: ["Preocupación", "Nerviosismo", "Tensión", "Inseguridad", "Miedo"] },
+  { core: "Enojo", color: "#E24B4A", emoji: "😤", nuances: ["Frustración", "Irritación", "Impotencia", "Injusticia", "Resentimiento"] },
+  { core: "Calma", color: "#A78BFA", emoji: "😌", nuances: ["Serenidad", "Alivio", "Equilibrio", "Confianza", "Claridad"] },
+  { core: "Agotamiento", color: "#94A3B8", emoji: "😩", nuances: ["Cansancio", "Saturación", "Desconexión", "Pesadez", "Desgaste"] },
+] as const;
+
 const EMOTION_SCORES: Record<string, number> = {
   Alegría: 5,
   Calma: 4,

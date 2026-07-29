@@ -1,8 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, AlertTriangle, Clock, Wind, Anchor, Loader2, History, Plus, X } from "lucide-react";
+import { Send, AlertTriangle, Clock, Wind, Anchor, Loader2, History, Plus, X, HeartPulse, CircleCheck } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import logoImg from "@/assets/logo.png";
 import { getChatMessages, listChatSessions, requestChatReply, type ChatApiMessage, type ChatSession } from "@/lib/chat";
+import {
+  createEmotionRecord,
+  EMOTION_CHECKIN_OPTIONS,
+  fetchEmotionRecords,
+  isEmotionFromToday,
+} from "@/lib/emotions";
+import type { EmotionRecord } from "@/lib/types";
 
 interface Message {
   id: number;
@@ -13,6 +20,7 @@ interface Message {
 }
 
 interface ChatProps {
+  userId: string;
   userName: string;
   onEmergency: () => void;
 }
@@ -43,19 +51,25 @@ const groundingTechniques = [
   }
 ];
 
-function createInitialMessages(userName: string): Message[] {
+function createInitialMessages(userName: string, emotion?: EmotionRecord | null): Message[] {
   const name = userName.trim();
+  const mood = emotion
+    ? `${emotion.primary_emotion}${emotion.emotions[0] ? ` · ${emotion.emotions[0]}` : ""}`
+    : "";
   return [{
     id: 1,
     from: "bot",
-    text: `Hola${name ? `, ${name}` : ""}. Me alegra que estés aquí. ¿Cómo te has sentido hoy? 💙`,
+    text: mood
+      ? `Hola${name ? `, ${name}` : ""}. Hoy registraste que te sientes ${mood}. Podemos partir de ahí, aunque también está bien si tu estado ya cambió. ¿Qué te gustaría contarme? 💙`
+      : `Hola${name ? `, ${name}` : ""}. Antes de conversar, cuéntame cómo te sientes hoy. 💙`,
     time: now(),
   }];
 }
 
 const SESSION_WARN_MIN = 30;
+const SESSION_REFLECTION_MIN = 10;
 
-export function Chat({ userName, onEmergency }: ChatProps) {
+export function Chat({ userId, userName, onEmergency }: ChatProps) {
   const reduceMotion = useReducedMotion();
   const [messages, setMessages] = useState<Message[]>(() => createInitialMessages(userName));
   const [input, setInput] = useState("");
@@ -69,6 +83,14 @@ export function Chat({ userName, onEmergency }: ChatProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState("");
+  const [checkInLoading, setCheckInLoading] = useState(true);
+  const [currentEmotion, setCurrentEmotion] = useState<EmotionRecord | null>(null);
+  const [checkInPrimary, setCheckInPrimary] = useState("");
+  const [checkInNuance, setCheckInNuance] = useState("");
+  const [checkInSaving, setCheckInSaving] = useState(false);
+  const [showReflection, setShowReflection] = useState(false);
+  const [reflectionSending, setReflectionSending] = useState(false);
+  const [reflectionCompleted, setReflectionCompleted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionRef = useRef<ReturnType<typeof setInterval>>();
@@ -79,11 +101,34 @@ export function Chat({ userName, onEmergency }: ChatProps) {
       setSessionMin(m => {
         const next = m + 1;
         if (next === SESSION_WARN_MIN) setShowOveruseWarning(true);
+        if (next === SESSION_REFLECTION_MIN) {
+          setShowReflection(true);
+        }
         return next;
       });
     }, 60000);
     return () => clearInterval(sessionRef.current);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchEmotionRecords(userId)
+      .then(records => {
+        if (!active) return;
+        const today = records.find(isEmotionFromToday) ?? null;
+        setCurrentEmotion(today);
+        setMessages(createInitialMessages(userName, today));
+      })
+      .catch(error => {
+        console.error("No se pudo cargar el check-in del chat:", error);
+      })
+      .finally(() => {
+        if (active) setCheckInLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId, userName]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -109,11 +154,72 @@ export function Chat({ userName, onEmergency }: ChatProps) {
 
   function startNewChat() {
     chatSessionIdRef.current = null;
-    setMessages(createInitialMessages(userName));
+    setMessages(createInitialMessages(userName, currentEmotion));
     setShowHistory(false);
     setNegativeCount(0);
     setShowGrounding(false);
+    setShowReflection(false);
+    setReflectionCompleted(false);
+    setSessionMin(0);
     requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  async function saveCheckIn() {
+    if (!checkInPrimary || !checkInNuance || checkInSaving) return;
+    setCheckInSaving(true);
+    try {
+      const record = await createEmotionRecord(userId, {
+        primary: checkInPrimary,
+        nuance: checkInNuance,
+      });
+      setCurrentEmotion(record);
+      setMessages(createInitialMessages(userName, record));
+      requestAnimationFrame(() => inputRef.current?.focus());
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "No se pudo guardar tu estado";
+      setMessages(current => [...current, { id: Date.now(), from: "bot", text, time: now() }]);
+    } finally {
+      setCheckInSaving(false);
+    }
+  }
+
+  async function submitReflection(outcome: "mejor" | "igual" | "más difícil") {
+    if (reflectionSending) return;
+    const reflectionText = outcome === "mejor"
+      ? "Al cerrar esta conversación, siento que estoy mejor y que hablarlo me ayudó a desahogarme."
+      : outcome === "igual"
+        ? "Al cerrar esta conversación, me siento prácticamente igual. Hablarlo me ayudó solo un poco o todavía no noto un cambio."
+        : "Al cerrar esta conversación, siento que esto sigue siendo difícil o que me siento peor. Necesito una respuesta cuidadosa y opciones de apoyo.";
+    const userMsg: Message = { id: Date.now(), from: "user", text: reflectionText, time: now() };
+    const apiMessages: ChatApiMessage[] = [...messages, userMsg]
+      .filter(message => message.from !== "system")
+      .map(message => ({
+        role: message.from === "bot" ? "model" : "user",
+        text: message.text,
+      }));
+
+    setMessages(current => [...current, userMsg]);
+    setReflectionSending(true);
+    try {
+      const result = await requestChatReply(apiMessages, chatSessionIdRef.current);
+      if (result.sessionId) chatSessionIdRef.current = result.sessionId;
+      setMessages(current => [...current, {
+        id: Date.now() + 1,
+        from: "bot",
+        text: result.reply,
+        time: now(),
+      }]);
+      setReflectionCompleted(true);
+      setShowReflection(false);
+      if (outcome === "más difícil" || result.crisis) {
+        setTimeout(() => onEmergency(), 400);
+      }
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "No se pudo guardar tu reflexión";
+      setMessages(current => [...current, { id: Date.now() + 1, from: "bot", text, time: now() }]);
+    } finally {
+      setReflectionSending(false);
+    }
   }
 
   async function openSession(session: ChatSession) {
@@ -231,6 +337,9 @@ export function Chat({ userName, onEmergency }: ChatProps) {
   }
 
   const gt = groundingTechniques[groundingIdx];
+  const selectedCheckInOption = EMOTION_CHECKIN_OPTIONS.find(
+    option => option.core === checkInPrimary
+  );
 
   return (
     <div className="relative flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
@@ -249,6 +358,16 @@ export function Chat({ userName, onEmergency }: ChatProps) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {messages.some(message => message.from === "user") && !reflectionCompleted && (
+            <button
+              onClick={() => setShowReflection(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl"
+              style={{ color: "var(--app-text)", background: "var(--app-surface-alt)", border: "1px solid var(--app-border)" }}
+            >
+              <HeartPulse size={15} />
+              Cerrar conversación
+            </button>
+          )}
           <button
             onClick={() => void openHistory()}
             className="flex items-center gap-2 px-3 py-2 rounded-xl"
@@ -306,6 +425,92 @@ export function Chat({ userName, onEmergency }: ChatProps) {
               </div>
             )}
           </aside>
+        </div>
+      )}
+
+      {(checkInLoading || !currentEmotion) && (
+        <div
+          className="absolute inset-x-0 bottom-0 z-30 flex items-center justify-center p-6 overflow-y-auto"
+          style={{ top: 73, background: "var(--app-bg)" }}
+        >
+          {checkInLoading ? (
+            <div className="flex items-center gap-3" style={{ color: "var(--app-text-muted)" }}>
+              <Loader2 size={22} className="animate-spin" />
+              Cargando tu check-in de hoy…
+            </div>
+          ) : (
+            <div className="w-full max-w-2xl p-6 rounded-3xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(91,136,178,0.16)" }}>
+                  <HeartPulse size={20} color="#78A6D1" />
+                </div>
+                <div>
+                  <h2 style={{ color: "var(--app-text)", fontSize: 19, fontWeight: 700 }}>Antes de conversar</h2>
+                  <p style={{ color: "var(--app-text-muted)", fontSize: 13 }}>FriendIA necesita saber cómo llegas hoy para acompañarte mejor.</p>
+                </div>
+              </div>
+
+              <p className="mt-6 mb-3" style={{ color: "var(--app-text)", fontSize: 14, fontWeight: 600 }}>¿Qué emoción se parece más a lo que sientes?</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {EMOTION_CHECKIN_OPTIONS.map(option => (
+                  <button
+                    key={option.core}
+                    onClick={() => {
+                      setCheckInPrimary(option.core);
+                      setCheckInNuance("");
+                    }}
+                    className="flex items-center gap-2 p-3 rounded-xl text-left"
+                    style={{
+                      background: checkInPrimary === option.core ? `${option.color}1F` : "var(--app-surface-alt)",
+                      border: `1px solid ${checkInPrimary === option.core ? option.color : "var(--app-border)"}`,
+                      color: "var(--app-text)",
+                    }}
+                  >
+                    <span>{option.emoji}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{option.core}</span>
+                  </button>
+                ))}
+              </div>
+
+              {selectedCheckInOption && (
+                <>
+                  <p className="mt-5 mb-3" style={{ color: "var(--app-text)", fontSize: 14, fontWeight: 600 }}>¿Qué matiz lo describe mejor?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCheckInOption.nuances.map(nuance => (
+                      <button
+                        key={nuance}
+                        onClick={() => setCheckInNuance(nuance)}
+                        className="px-3 py-2 rounded-full"
+                        style={{
+                          background: checkInNuance === nuance ? `${selectedCheckInOption.color}24` : "var(--app-surface-alt)",
+                          border: `1px solid ${checkInNuance === nuance ? selectedCheckInOption.color : "var(--app-border)"}`,
+                          color: checkInNuance === nuance ? selectedCheckInOption.color : "var(--app-text-muted)",
+                          fontSize: 12,
+                        }}
+                      >
+                        {nuance}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <button
+                onClick={() => void saveCheckIn()}
+                disabled={!checkInPrimary || !checkInNuance || checkInSaving}
+                className="w-full mt-6 py-3 rounded-xl flex items-center justify-center gap-2"
+                style={{
+                  background: "#5B88B2",
+                  color: "#fff",
+                  opacity: !checkInPrimary || !checkInNuance || checkInSaving ? 0.5 : 1,
+                  fontWeight: 700,
+                }}
+              >
+                {checkInSaving ? <Loader2 size={16} className="animate-spin" /> : <CircleCheck size={16} />}
+                Guardar y comenzar
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -409,6 +614,56 @@ export function Chat({ userName, onEmergency }: ChatProps) {
               FriendIA está escribiendo…
             </div>
           </div>
+        )}
+
+        {showReflection && (
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-5 rounded-2xl"
+            style={{ background: "var(--app-surface)", border: "1px solid rgba(120,166,209,0.32)" }}
+          >
+            <div className="flex items-start gap-3">
+              <HeartPulse size={20} color="#78A6D1" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div className="flex-1">
+                <p style={{ color: "var(--app-text)", fontSize: 15, fontWeight: 700 }}>Antes de cerrar, ¿algo cambió?</p>
+                <p className="mt-1" style={{ color: "var(--app-text-muted)", fontSize: 13, lineHeight: 1.5 }}>
+                  No hay una respuesta correcta. Esto ayuda a FriendIA a saber si hablarlo te permitió sentirte un poco mejor o desahogarte.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4">
+                  {([
+                    ["mejor", "Me siento mejor"],
+                    ["igual", "Me siento igual"],
+                    ["más difícil", "Sigue siendo difícil"],
+                  ] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      onClick={() => void submitReflection(value)}
+                      disabled={reflectionSending}
+                      className="px-3 py-2.5 rounded-xl"
+                      style={{
+                        background: value === "mejor" ? "rgba(76,217,100,0.12)" : "var(--app-surface-alt)",
+                        border: `1px solid ${value === "mejor" ? "rgba(76,217,100,0.28)" : "var(--app-border)"}`,
+                        color: "var(--app-text)",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowReflection(false)}
+                  disabled={reflectionSending}
+                  className="mt-3"
+                  style={{ background: "none", border: 0, color: "var(--app-text-muted)", fontSize: 12 }}
+                >
+                  Seguir conversando
+                </button>
+              </div>
+            </div>
+          </motion.div>
         )}
 
         <div ref={bottomRef} />

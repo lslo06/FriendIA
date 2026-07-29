@@ -134,6 +134,39 @@ export async function createDiaryEntry(
   return mapDiaryEntry(data as DiaryRow);
 }
 
+export async function updateDiaryEntry(
+  userId: string,
+  entryId: string,
+  entry: { text: string; mood?: string; tag?: string }
+): Promise<DiaryEntry> {
+  const profileId = await getProfileId(userId);
+  if (!profileId) throw new Error("Perfil no encontrado");
+
+  const text = entry.text.trim();
+  if (!text) throw new Error("La entrada no puede estar vacía");
+
+  const moodOption = entry.mood
+    ? MOOD_OPTIONS.find(option => option.emoji === entry.mood)
+    : undefined;
+  const tag = entry.tag ?? moodOption?.label;
+
+  const { data, error } = await supabase
+    .schema("Group_By")
+    .from("entradas_diario")
+    .update({
+      contenido: text,
+      etiquetas: tag ? [tag] : [],
+      puntuacion_animo: moodOption?.score ?? null,
+    })
+    .eq("id_entrada_diario", entryId)
+    .eq("id_perfil", profileId)
+    .select("id_entrada_diario,id_perfil,contenido,etiquetas,puntuacion_animo,creado_en")
+    .single();
+
+  if (error) throw error;
+  return mapDiaryEntry(data as DiaryRow);
+}
+
 export function filterEntries(
   entries: DiaryEntry[],
   filter: "todos" | "semana" | "mes"

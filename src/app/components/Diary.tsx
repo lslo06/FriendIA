@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, ChevronRight, Loader2 } from "lucide-react";
+import { Plus, ChevronRight, Loader2, X, Pencil, Save, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   createDiaryEntry,
@@ -8,6 +8,7 @@ import {
   formatEntryDate,
   getTagColor,
   MOOD_OPTIONS,
+  updateDiaryEntry,
 } from "@/lib/diary";
 import type { DiaryEntry } from "@/lib/types";
 
@@ -25,6 +26,11 @@ export function Diary({ userId }: DiaryProps) {
   const [showNew, setShowNew] = useState(false);
   const [newText, setNewText] = useState("");
   const [newMood, setNewMood] = useState("");
+  const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
+  const [editingEntry, setEditingEntry] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [editMood, setEditMood] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -67,6 +73,39 @@ export function Diary({ userId }: DiaryProps) {
     }
   }
 
+  function openEntry(entry: DiaryEntry) {
+    setSelectedEntry(entry);
+    setEditText(entry.text);
+    setEditMood(entry.mood ?? "");
+    setEditingEntry(false);
+  }
+
+  function closeEntry() {
+    if (savingEdit) return;
+    setSelectedEntry(null);
+    setEditingEntry(false);
+  }
+
+  async function handleUpdate() {
+    if (!selectedEntry || !editText.trim() || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      const updated = await updateDiaryEntry(userId, selectedEntry.id, {
+        text: editText,
+        mood: editMood || undefined,
+      });
+      setEntries(current => current.map(entry => entry.id === updated.id ? updated : entry));
+      setSelectedEntry(updated);
+      setEditingEntry(false);
+      toast.success("Entrada actualizada");
+    } catch (error) {
+      console.error("Error actualizando la entrada:", error);
+      toast.error("No se pudo actualizar la entrada");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   const filtered = filterEntries(entries, filter);
 
   if (loading) {
@@ -79,6 +118,98 @@ export function Diary({ userId }: DiaryProps) {
 
   return (
     <div className="flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
+      {selectedEntry && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(4,9,15,0.72)", backdropFilter: "blur(8px)" }}
+          onClick={closeEntry}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-3xl overflow-hidden"
+            style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)", boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}
+            onClick={event => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Entrada del diario ampliada"
+          >
+            <div className="flex items-center justify-between gap-4 px-6 py-4" style={{ borderBottom: "1px solid var(--app-border)" }}>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  {selectedEntry.mood && <span>{selectedEntry.mood}</span>}
+                  <h2 style={{ color: "var(--app-text)", fontSize: 18, fontWeight: 700 }}>Entrada del diario</h2>
+                </div>
+                <p style={{ color: "var(--app-text-muted)", fontSize: 12 }}>{formatEntryDate(selectedEntry.created_at)}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {!editingEntry && (
+                  <button
+                    onClick={() => setEditingEntry(true)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                    style={{ background: "var(--app-surface-alt)", color: "var(--app-text)", border: "1px solid var(--app-border)" }}
+                  >
+                    <Pencil size={15} /> Editar
+                  </button>
+                )}
+                <button onClick={closeEntry} aria-label="Cerrar entrada" className="p-2 rounded-xl" style={{ background: "none", color: "var(--app-text-muted)", border: 0 }}>
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto p-6">
+              {editingEntry ? (
+                <>
+                  <p className="mb-2" style={{ color: "var(--app-text)", fontSize: 13, fontWeight: 600 }}>¿Cómo te sentías?</p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {MOOD_OPTIONS.map(({ emoji, label }) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        title={label}
+                        aria-label={label}
+                        onClick={() => setEditMood(emoji)}
+                        className="text-xl p-2 rounded-xl"
+                        style={{ background: editMood === emoji ? "rgba(91,136,178,0.2)" : "var(--app-surface-alt)", border: editMood === emoji ? "1px solid #5B88B2" : "1px solid transparent" }}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={editText}
+                    onChange={event => setEditText(event.target.value)}
+                    rows={14}
+                    className="w-full rounded-2xl p-4 outline-none resize-y"
+                    style={{ minHeight: 280, background: "var(--app-surface-alt)", border: "1px solid var(--app-border-medium)", color: "var(--app-text)", fontSize: "calc(15px * var(--app-font-scale))", lineHeight: 1.75 }}
+                    autoFocus
+                  />
+                </>
+              ) : (
+                <p style={{ color: "var(--app-text)", fontSize: "calc(16px * var(--app-font-scale))", lineHeight: 1.85, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                  {selectedEntry.text}
+                </p>
+              )}
+            </div>
+
+            {editingEntry && (
+              <div className="flex justify-end gap-3 px-6 py-4" style={{ borderTop: "1px solid var(--app-border)" }}>
+                <button onClick={() => { setEditingEntry(false); setEditText(selectedEntry.text); setEditMood(selectedEntry.mood ?? ""); }} style={{ background: "none", border: 0, color: "var(--app-text-muted)" }}>
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => void handleUpdate()}
+                  disabled={savingEdit || !editText.trim()}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl"
+                  style={{ background: "#5B88B2", color: "#fff", border: 0, opacity: savingEdit || !editText.trim() ? .55 : 1, fontWeight: 700 }}
+                >
+                  {savingEdit ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                  Guardar cambios
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <h1 style={{ fontSize: "calc(24px * var(--app-font-scale))", fontWeight: 700, color: "var(--app-text)" }}>Mi Diario Emocional</h1>
         <button
@@ -167,6 +298,7 @@ export function Diary({ userId }: DiaryProps) {
                 style={{ background: "var(--app-surface)", border: "1px solid var(--app-border)" }}
                 onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = "rgba(91,136,178,0.25)")}
                 onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "var(--app-border)")}
+                onClick={() => openEntry(entry)}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="flex items-center gap-2 mb-1">
@@ -178,6 +310,18 @@ export function Diary({ userId }: DiaryProps) {
                   </div>
                   <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", lineHeight: 1.5, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{entry.text}</p>
                 </div>
+                <button
+                  onClick={event => {
+                    event.stopPropagation();
+                    openEntry(entry);
+                  }}
+                  className="p-2 rounded-xl"
+                  style={{ background: "var(--app-surface-alt)", border: "1px solid var(--app-border)", color: "var(--app-text-muted)" }}
+                  aria-label="Ver entrada completa"
+                  title="Ver en grande"
+                >
+                  <Maximize2 size={16} />
+                </button>
                 <ChevronRight size={16} color="var(--app-text-muted)" style={{ flexShrink: 0 }} />
               </div>
             );
