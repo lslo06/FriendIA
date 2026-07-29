@@ -9,12 +9,19 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+const localDevelopmentOrigin = /^http:\/\/(?:localhost|127\.0\.0\.1):51\d{2}$/;
 
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    const isAllowedLocalOrigin =
+      process.env.NODE_ENV !== 'production'
+      && typeof origin === 'string'
+      && localDevelopmentOrigin.test(origin);
+    if (!origin || allowedOrigins.includes(origin) || isAllowedLocalOrigin) {
+      return callback(null, true);
+    }
     return callback(new Error('Origen no permitido por CORS'));
   },
 }));
