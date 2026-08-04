@@ -260,8 +260,52 @@ function MobileAppSection() {
   );
 }
 
+const privacySections = [
+  ["Responsable y alcance", "FriendIA es una herramienta de acompañamiento emocional ofrecida por el consultorio del Lic. Irwing Alexis Calvillo Gutiérrez. Este aviso explica cómo se trata la información de quienes utilizan la plataforma."],
+  ["Información que recopilamos", "Podemos almacenar datos de cuenta y perfil, respuestas del check-in emocional, entradas del diario, conversaciones con la guía de IA, preferencias y datos técnicos necesarios para iniciar sesión, proteger la cuenta y operar el servicio."],
+  ["Para qué se utiliza", "La información se usa para prestar las funciones solicitadas, mostrar historiales y tendencias emocionales, generar los reportes elegidos por el usuario, mantener la seguridad, corregir errores y mejorar la experiencia. FriendIA no vende datos personales."],
+  ["Proveedores", "La plataforma puede usar proveedores de infraestructura, autenticación, base de datos e inteligencia artificial para procesar la información necesaria. Estos proveedores reciben únicamente lo requerido para prestar sus servicios y están sujetos a sus propias medidas y condiciones de privacidad."],
+  ["Conservación y control", "Los datos se conservan mientras la cuenta permanezca activa o sean necesarios para operar el servicio y cumplir obligaciones aplicables. Desde Configuración puedes eliminar historiales o solicitar la eliminación de la cuenta. Los reportes PDF quedan bajo tu responsabilidad al descargarlos o compartirlos."],
+  ["Seguridad y derechos", "Aplicamos controles razonables de acceso y seguridad, aunque ningún sistema conectado a internet puede garantizar riesgo cero. Puedes solicitar acceso, rectificación, cancelación u oposición escribiendo al correo de contacto."],
+  ["Menores y cambios", "Si una persona menor de edad utiliza FriendIA, debe hacerlo con la autorización y supervisión correspondiente. Las modificaciones importantes se comunicarán en la plataforma y mostrarán una nueva fecha de vigencia."],
+];
+
+const termsSections = [
+  ["Aceptación", "Al crear una cuenta o utilizar FriendIA aceptas estos términos y el Aviso de privacidad. Si no estás de acuerdo, no utilices la plataforma."],
+  ["Naturaleza del servicio", "FriendIA es una herramienta de registro, reflexión y acompañamiento entre sesiones. No ofrece diagnósticos o tratamiento médico o psicológico, ni sustituye a profesionales de la salud. Las respuestas de IA pueden ser incompletas o equivocadas y no deben tomarse como instrucciones clínicas."],
+  ["Emergencias", "FriendIA no es un servicio de emergencias. Si existe peligro inmediato o riesgo de daño, llama al 911 en México, acude a urgencias o contacta a una persona de confianza. No dependas del chat para recibir ayuda urgente."],
+  ["Cuenta y uso permitido", "Debes proporcionar información correcta, proteger tus credenciales y notificarnos sobre accesos no autorizados. No puedes intentar vulnerar la plataforma, automatizar usos abusivos, suplantar personas, infringir derechos o utilizar el servicio para causar daño."],
+  ["Contenido y reportes", "Conservas la responsabilidad sobre lo que escribes y sobre cualquier reporte que descargues o compartas. Autorizas únicamente el procesamiento técnico necesario para ofrecer las funciones que solicitas."],
+  ["Disponibilidad", "Podemos actualizar, suspender o modificar funciones para mantener la seguridad y calidad del servicio. Aunque procuramos continuidad, no garantizamos funcionamiento ininterrumpido ni resultados terapéuticos específicos."],
+  ["Terminación y cambios", "Puedes dejar de usar FriendIA y eliminar tu cuenta desde Configuración. Podemos restringir cuentas que incumplan estos términos. Los cambios se publicarán con una nueva fecha de vigencia."],
+];
+
+function LegalDialog({ type, onClose }: { type: "privacy" | "terms"; onClose: () => void }) {
+  const sections = type === "privacy" ? privacySections : termsSections;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6" style={{ background: "rgba(4,9,15,.84)", backdropFilter: "blur(8px)" }} onClick={onClose}>
+      <article className="relative w-full max-w-3xl max-h-[calc(100dvh-24px)] sm:max-h-[88dvh] overflow-y-auto rounded-2xl sm:rounded-3xl p-5 sm:p-8" style={{ background: "#1A2332", border: "1px solid rgba(91,136,178,.3)", boxShadow: "0 24px 80px rgba(0,0,0,.5)" }} onClick={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="legal-title">
+        <button onClick={onClose} aria-label="Cerrar" className="absolute right-4 top-4 rounded-xl p-2" style={{ color: "#94A3B8", background: "rgba(255,255,255,.05)", border: 0 }}><X size={20} /></button>
+        <Logo size={28} showName />
+        <p className="mt-6" style={{ color: "#5B88B2", fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>Vigente desde el 4 de agosto de 2026</p>
+        <h2 id="legal-title" className="mt-2 pr-10" style={{ color: "#E2E8F0", fontSize: "clamp(1.6rem, 5vw, 2.2rem)", fontWeight: 800 }}>{type === "privacy" ? "Aviso de privacidad" : "Términos de uso"}</h2>
+        <div className="mt-6 space-y-6" style={{ color: "#B7C3D4", fontSize: 14, lineHeight: 1.75 }}>
+          {sections.map(([title, text], index) => <section key={title}><h3 style={{ color: "#E2E8F0", fontWeight: 700 }}>{index + 1}. {title}</h3><p>{text}</p></section>)}
+          <section><h3 style={{ color: "#E2E8F0", fontWeight: 700 }}>Contacto</h3><p>Para ejercer derechos o resolver dudas, escribe a <a href="mailto:alexiscvlldgo@gmail.com" style={{ color: "#78A6D1" }}>alexiscvlldgo@gmail.com</a>.</p></section>
+        </div>
+      </article>
+    </div>
+  );
+}
+
 export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<"privacy" | "terms" | null>(null);
+
+  function openLegal(document: "privacy" | "terms") {
+    setMobileMenuOpen(false);
+    setLegalDocument(document);
+  }
 
   return (
     <div style={{ background: "#121820", minHeight: "100vh", color: "#E2E8F0", fontFamily: "'DM Sans', sans-serif" }}>
@@ -277,15 +321,17 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
         }}
       >
         <Logo size={34} showName />
-        <div className="hidden lg:flex items-center gap-8">
-          {[["Funcionalidades","#features"],["Cómo funciona","#how"],["Testimonios","#testimonials"]].map(([label, href]) => (
+        <div className="hidden xl:flex items-center gap-5">
+          {[["Funcionalidades","#features"],["Cómo funciona","#how"],["Testimonios","#testimonials"],["Iniciar tu proceso","#start"]].map(([label, href]) => (
             <a key={label} href={href} style={{ color: "#94A3B8", fontSize: 14, textDecoration: "none", transition: "color 0.15s" }}
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#E2E8F0")}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "#94A3B8")}
             >{label}</a>
           ))}
+          <button onClick={() => openLegal("privacy")} style={{ color: "#94A3B8", fontSize: 14, background: "none", border: 0, padding: 0 }}>Privacidad</button>
+          <button onClick={() => openLegal("terms")} style={{ color: "#94A3B8", fontSize: 14, background: "none", border: 0, padding: 0 }}>Términos</button>
         </div>
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3">
           <button
             onClick={onLogin}
             className="px-5 py-2 rounded-xl transition-all"
@@ -301,10 +347,12 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "#5B88B2")}
           >Agendar consulta</a>
         </div>
-        <button className="sm:hidden p-2 rounded-xl" onClick={() => setMobileMenuOpen(open => !open)} aria-label="Abrir menú" aria-expanded={mobileMenuOpen} style={{ background: "rgba(91,136,178,.12)", border: "1px solid rgba(91,136,178,.25)", color: "#78A6D1" }}>{mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}</button>
+        <button className="xl:hidden p-2 rounded-xl" onClick={() => setMobileMenuOpen(open => !open)} aria-label="Abrir menú" aria-expanded={mobileMenuOpen} style={{ background: "rgba(91,136,178,.12)", border: "1px solid rgba(91,136,178,.25)", color: "#78A6D1" }}>{mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}</button>
         {mobileMenuOpen && (
-          <div className="absolute inset-x-3 top-full mt-2 rounded-2xl p-3 sm:hidden" style={{ background: "#182230", border: "1px solid rgba(91,136,178,.25)", boxShadow: "0 18px 50px rgba(0,0,0,.45)" }}>
-            {[['Funcionalidades','#features'],['Cómo funciona','#how'],['Testimonios','#testimonials']].map(([label, href]) => <a key={label} href={href} onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-4 py-3" style={{ color: "#CBD5E1", textDecoration: "none", fontSize: 14 }}>{label}</a>)}
+          <div className="absolute inset-x-3 top-full mt-2 max-h-[calc(100dvh-88px)] overflow-y-auto rounded-2xl p-3 xl:hidden" style={{ background: "#182230", border: "1px solid rgba(91,136,178,.25)", boxShadow: "0 18px 50px rgba(0,0,0,.45)" }}>
+            {[['Funcionalidades','#features'],['Cómo funciona','#how'],['Testimonios','#testimonials'],['Iniciar tu proceso','#start']].map(([label, href]) => <a key={label} href={href} onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-4 py-3" style={{ color: "#CBD5E1", textDecoration: "none", fontSize: 14 }}>{label}</a>)}
+            <button onClick={() => openLegal("privacy")} className="block w-full rounded-xl px-4 py-3 text-left" style={{ color: "#CBD5E1", background: "none", border: 0, fontSize: 14 }}>Privacidad</button>
+            <button onClick={() => openLegal("terms")} className="block w-full rounded-xl px-4 py-3 text-left" style={{ color: "#CBD5E1", background: "none", border: 0, fontSize: 14 }}>Términos</button>
             <div className="my-2" style={{ height: 1, background: "rgba(255,255,255,.08)" }} />
             <button onClick={() => { setMobileMenuOpen(false); onLogin(); }} className="w-full rounded-xl px-4 py-3 text-left" style={{ color: "#78A6D1", background: "rgba(91,136,178,.1)", border: 0, fontWeight: 700 }}>Ya soy paciente</button>
             <a href="mailto:alexiscvlldgo@gmail.com" className="mt-2 block w-full rounded-xl px-4 py-3 text-center" style={{ color: "#fff", background: "#5B88B2", textDecoration: "none", fontWeight: 700 }}>Agendar consulta</a>
@@ -515,7 +563,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       </section>
 
       {/* FINAL CTA — Contact */}
-      <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#0F1825" }}>
+      <section id="start" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-10 scroll-mt-20" style={{ background: "#0F1825" }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 36px)", fontWeight: 700, color: "#E2E8F0", marginBottom: 12 }}>
             ¿Listo para iniciar tu proceso?
@@ -593,12 +641,9 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
           </div>
           <div className="flex flex-col items-start sm:items-end gap-3">
             <div className="flex flex-wrap gap-4 sm:gap-6">
-              {["Privacidad", "Términos", "Contacto"].map(link => (
-                <a key={link} href="#" style={{ fontSize: 13, color: "#94A3B8", textDecoration: "none" }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#E2E8F0")}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "#94A3B8")}
-                >{link}</a>
-              ))}
+              <button onClick={() => openLegal("privacy")} style={{ fontSize: 13, color: "#94A3B8", background: "none", border: 0, padding: 0 }}>Privacidad</button>
+              <button onClick={() => openLegal("terms")} style={{ fontSize: 13, color: "#94A3B8", background: "none", border: 0, padding: 0 }}>Términos</button>
+              <a href="#start" style={{ fontSize: 13, color: "#94A3B8", textDecoration: "none" }}>Contacto</a>
             </div>
             <button
               onClick={onLogin}
@@ -607,6 +652,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
           </div>
         </div>
       </footer>
+      {legalDocument && <LegalDialog type={legalDocument} onClose={() => setLegalDocument(null)} />}
     </div>
   );
 }
