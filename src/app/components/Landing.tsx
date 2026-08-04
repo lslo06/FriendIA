@@ -280,7 +280,7 @@ const termsSections = [
   ["Terminación y cambios", "Puedes dejar de usar FriendIA y eliminar tu cuenta desde Configuración. Podemos restringir cuentas que incumplan estos términos. Los cambios se publicarán con una nueva fecha de vigencia."],
 ];
 
-function LegalDialog({ type, onClose }: { type: "privacy" | "terms"; onClose: () => void }) {
+export function LegalDialog({ type, onClose }: { type: "privacy" | "terms"; onClose: () => void }) {
   const sections = type === "privacy" ? privacySections : termsSections;
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6" style={{ background: "rgba(4,9,15,.84)", backdropFilter: "blur(8px)" }} onClick={onClose}>

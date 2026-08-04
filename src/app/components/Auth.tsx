@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { savePersonalDetails, type PersonalDetails } from "@/lib/profiles";
 import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./Logo";
+import { LegalDialog } from "./Landing";
 
 export interface AuthResult {
   userName: string;
@@ -106,6 +107,8 @@ export function Auth({
   const [signupStep, setSignupStep] = useState<"details" | "password">(
     "details"
   );
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<"privacy" | "terms" | null>(null);
 
   const [googleEmailConflict, setGoogleEmailConflict] = useState(false);
   const [passwordSetupMode, setPasswordSetupMode] = useState(
@@ -244,6 +247,9 @@ export function Auth({
   async function handleGoogleLogin() {
     try {
       setError("");
+      if (mode === "signup" && !acceptedLegal) {
+        throw new Error("Debes aceptar los Términos y el Aviso de privacidad para registrarte");
+      }
       setLoading(true);
       googleProcesado.current = false;
 
@@ -270,6 +276,9 @@ export function Auth({
   async function handleGooglePasswordSetup() {
     try {
       setError("");
+      if (mode === "signup" && !acceptedLegal) {
+        throw new Error("Debes aceptar los Términos y el Aviso de privacidad para registrarte");
+      }
       setLoading(true);
       googleProcesado.current = false;
 
@@ -400,6 +409,9 @@ export function Auth({
   }
 
   async function handleRegister() {
+    if (!acceptedLegal) {
+      throw new Error("Debes aceptar los Términos y el Aviso de privacidad para crear tu cuenta");
+    }
     if (!name.trim()) throw new Error("Ingresa tu nombre");
     if (!apellidoPat.trim()) throw new Error("Ingresa tu apellido paterno");
     if (!apellidoMat.trim()) throw new Error("Ingresa tu apellido materno");
@@ -423,6 +435,8 @@ export function Auth({
           apellido_mat: apellidoMat.trim(),
           email: email.trim(),
           password,
+          accepted_legal: true,
+          legal_version: "2026-08-04",
         }),
       });
     } catch {
@@ -469,6 +483,9 @@ export function Auth({
   }
 
   async function handleCheckSignupEmail() {
+    if (!acceptedLegal) {
+      throw new Error("Debes aceptar los Términos y el Aviso de privacidad para continuar");
+    }
     if (!name.trim()) throw new Error("Ingresa tu nombre");
     if (!apellidoPat.trim()) throw new Error("Ingresa tu apellido paterno");
     if (!apellidoMat.trim()) throw new Error("Ingresa tu apellido materno");
@@ -797,16 +814,38 @@ export function Auth({
           </p>
         </div>
 
+        {mode === "signup" && (
+          <div className="mb-5 rounded-xl p-3" style={{ background: "rgba(91,136,178,.08)", border: `1px solid ${acceptedLegal ? "rgba(76,217,100,.35)" : "rgba(91,136,178,.25)"}` }}>
+            <div className="flex items-start gap-3">
+              <input
+                id="accept-legal"
+                type="checkbox"
+                checked={acceptedLegal}
+                onChange={event => { setAcceptedLegal(event.target.checked); setError(""); }}
+                className="mt-1 h-4 w-4 flex-shrink-0"
+                style={{ accentColor: "#5B88B2" }}
+              />
+              <div style={{ color: "#B7C3D4", fontSize: 13, lineHeight: 1.55 }}>
+                <label htmlFor="accept-legal">Acepto los </label>
+                <button type="button" onClick={() => setLegalDocument("terms")} style={{ color: "#78A6D1", background: "none", border: 0, padding: 0, textDecoration: "underline" }}>Términos y condiciones</button>
+                <span> y el </span>
+                <button type="button" onClick={() => setLegalDocument("privacy")} style={{ color: "#78A6D1", background: "none", border: 0, padding: 0, textDecoration: "underline" }}>Aviso de privacidad</button>
+                <span>. Ambos enlaces se pueden revisar antes de aceptar.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <button
           type="button"
-          disabled={loading}
+          disabled={loading || (mode === "signup" && !acceptedLegal)}
           onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center gap-3 py-3 rounded-xl mb-5"
           style={{
             background: "#fff",
             color: "#2C3E50",
             fontWeight: 600,
-            opacity: loading ? 0.7 : 1,
+            opacity: loading || (mode === "signup" && !acceptedLegal) ? 0.5 : 1,
           }}
         >
           <svg width="18" height="18" viewBox="0 0 18 18">
@@ -1007,13 +1046,13 @@ export function Auth({
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (mode === "signup" && !acceptedLegal)}
             className="w-full py-3.5 rounded-xl mt-2 flex items-center justify-center gap-2"
             style={{
               background: "#5B88B2",
               color: "#fff",
               fontWeight: 600,
-              opacity: loading ? 0.7 : 1,
+              opacity: loading || (mode === "signup" && !acceptedLegal) ? 0.5 : 1,
             }}
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
@@ -1042,6 +1081,7 @@ export function Auth({
               setSignupStep("details");
               setPassword("");
               setGoogleEmailConflict(false);
+              setAcceptedLegal(false);
             }}
             style={{
               color: "#5B88B2",
@@ -1055,6 +1095,7 @@ export function Auth({
           </button>
         </p>
       </div>
+      {legalDocument && <LegalDialog type={legalDocument} onClose={() => setLegalDocument(null)} />}
     </div>
   );
 }

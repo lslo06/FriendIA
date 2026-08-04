@@ -242,6 +242,8 @@ router.post("/registro", async (req, res) => {
       nombre,
       apellido_pat,
       apellido_mat,
+      accepted_legal,
+      legal_version,
     } = req.body;
 
     const normalizedEmail = normalizeRequiredText(email).toLowerCase();
@@ -258,6 +260,12 @@ router.post("/registro", async (req, res) => {
     ) {
       return res.status(400).json({
         error: "Todos los campos son obligatorios",
+      });
+    }
+
+    if (accepted_legal !== true || legal_version !== "2026-08-04") {
+      return res.status(400).json({
+        error: "Debes aceptar los Términos y el Aviso de privacidad vigentes",
       });
     }
 
@@ -284,6 +292,8 @@ router.post("/registro", async (req, res) => {
             apellido_pat: normalizedLastName,
             apellido_mat: normalizedSecondLastName,
             full_name: `${normalizedName} ${normalizedLastName} ${normalizedSecondLastName}`,
+            legal_accepted_at: new Date().toISOString(),
+            legal_version,
           },
         },
       });
