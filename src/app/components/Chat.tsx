@@ -335,7 +335,7 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
   );
 
   return (
-    <div className="fixed inset-0 h-[100dvh] flex flex-col md:relative md:inset-auto md:h-auto md:flex-1" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
+    <div className="relative min-h-0 h-full flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-2 px-3 sm:px-6 py-3 sm:py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">

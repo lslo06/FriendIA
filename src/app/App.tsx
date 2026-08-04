@@ -192,7 +192,7 @@ export default function App() {
   }
 
   return (
-    <div className="friendia-app flex h-screen overflow-hidden" style={{ background: "var(--app-bg)" }}>
+    <div className="friendia-app flex h-[100dvh] overflow-hidden" style={{ background: "var(--app-bg)" }}>
       <Sidebar
         active={activeTab}
         onNavigate={tab => setActiveTab(tab)}
