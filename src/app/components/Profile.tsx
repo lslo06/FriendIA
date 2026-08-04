@@ -19,7 +19,11 @@ import {
 } from "@/lib/profiles";
 import type { UserProfile } from "@/lib/types";
 import { computeDiaryStats, fetchDiaryEntries } from "@/lib/diary";
+import { fetchEmotionRecords } from "@/lib/emotions";
+import { listChatSessions } from "@/lib/chat";
 import { emotionIcons } from "@/lib/emotionIcons";
+import { buildFriendiaReportHtml, filterReportPeriod, writeAndPrintReport } from "@/lib/pdfReport";
+import logoImg from "@/assets/logo.png";
 
 interface ProfileProps {
   userId: string;
@@ -121,6 +125,10 @@ export function Profile({
   const [showPasswords, setShowPasswords] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [showReportOptions, setShowReportOptions] = useState(false);
+  const [reportPeriod, setReportPeriod] = useState<7 | 30 | 90>(30);
+  const [includeDiaryText, setIncludeDiaryText] = useState(false);
+  const [exportingReport, setExportingReport] = useState(false);
 
   useEffect(() => {
     setName(profile?.nombre?.trim() || userName);
@@ -217,6 +225,47 @@ export function Profile({
         ? current.filter((item) => item !== concern)
         : [...current, concern]
     );
+  }
+
+  async function handleExportReport() {
+    const reportWindow = window.open("", "_blank");
+    if (!reportWindow) {
+      toast.error("Permite las ventanas emergentes para generar el PDF");
+      return;
+    }
+
+    reportWindow.document.write("<p style='font-family:Arial;padding:32px'>Preparando tu reporte de FriendIA...</p>");
+    setExportingReport(true);
+    try {
+      const [entriesResult, emotionsResult, chatsResult] = await Promise.allSettled([
+        fetchDiaryEntries(userId),
+        fetchEmotionRecords(userId),
+        listChatSessions(),
+      ]);
+      const entries = entriesResult.status === "fulfilled" ? entriesResult.value : [];
+      const emotions = emotionsResult.status === "fulfilled" ? emotionsResult.value : [];
+      const chatSessions = chatsResult.status === "fulfilled" ? chatsResult.value.length : null;
+      const html = buildFriendiaReportHtml({
+        userName: fullName || userName,
+        email: emailField || email,
+        periodDays: reportPeriod,
+        generatedAt: new Date(),
+        diaryEntries: filterReportPeriod(entries, entry => entry.created_at, reportPeriod),
+        emotionRecords: filterReportPeriod(emotions, record => record.date, reportPeriod),
+        chatSessions,
+        includeDiaryText,
+        logoUrl: new URL(logoImg, window.location.href).href,
+      });
+      writeAndPrintReport(reportWindow, html);
+      setShowReportOptions(false);
+      toast.success("Reporte preparado. Selecciona ‘Guardar como PDF’");
+    } catch (error) {
+      reportWindow.close();
+      console.error("Error generando el reporte:", error);
+      toast.error("No se pudo generar el reporte");
+    } finally {
+      setExportingReport(false);
+    }
   }
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
@@ -363,6 +412,34 @@ export function Profile({
       className="flex-1 overflow-y-auto p-4 sm:p-8"
       style={{ background: "var(--app-bg)" }}
     >
+      {showReportOptions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(4,9,15,.78)", backdropFilter: "blur(7px)" }} onClick={() => !exportingReport && setShowReportOptions(false)}>
+          <div className="w-full max-w-lg rounded-3xl p-6" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)", boxShadow: "0 24px 80px rgba(0,0,0,.4)" }} onClick={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="report-options-title">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="report-options-title" style={{ color: "var(--app-text)", fontSize: 20, fontWeight: 700 }}>Exportar reporte PDF</h2>
+                <p className="mt-1" style={{ color: "var(--app-text-muted)", fontSize: 13, lineHeight: 1.55 }}>Elige qué información deseas incluir en tu reporte de FriendIA.</p>
+              </div>
+              <button onClick={() => setShowReportOptions(false)} disabled={exportingReport} aria-label="Cerrar" className="p-2 rounded-xl" style={{ background: "var(--app-surface-alt)", border: 0, color: "var(--app-text-muted)" }}><EyeOff size={18} /></button>
+            </div>
+            <div className="mt-6">
+              <p style={{ color: "var(--app-text)", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Periodo del reporte</p>
+              <div className="grid grid-cols-3 gap-2">
+                {([7, 30, 90] as const).map(days => <button key={days} onClick={() => setReportPeriod(days)} className="py-2.5 rounded-xl" style={{ background: reportPeriod === days ? "rgba(91,136,178,.2)" : "var(--app-surface-alt)", border: `1px solid ${reportPeriod === days ? "#5B88B2" : "var(--app-border)"}`, color: reportPeriod === days ? "#78A6D1" : "var(--app-text-muted)", fontWeight: 700 }}>{days} días</button>)}
+              </div>
+            </div>
+            <label className="flex items-start gap-3 mt-5 p-4 rounded-xl cursor-pointer" style={{ background: "var(--app-surface-alt)", border: "1px solid var(--app-border)" }}>
+              <input type="checkbox" checked={includeDiaryText} onChange={event => setIncludeDiaryText(event.target.checked)} style={{ marginTop: 3 }} />
+              <span><strong style={{ display: "block", color: "var(--app-text)", fontSize: 13 }}>Incluir texto completo del diario</strong><span style={{ color: "var(--app-text-muted)", fontSize: 12 }}>Desactivado por defecto para proteger tu privacidad.</span></span>
+            </label>
+            <div className="mt-4 p-3 rounded-xl" style={{ background: "rgba(245,166,35,.08)", border: "1px solid rgba(245,166,35,.25)", color: "var(--app-text-muted)", fontSize: 12, lineHeight: 1.5 }}>El PDF incluye métricas, evolución emocional, patrones, check-ins, diario y número de conversaciones. No exporta el contenido de tus chats.</div>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
+              <button onClick={() => setShowReportOptions(false)} disabled={exportingReport} className="px-4 py-2.5 rounded-xl" style={{ background: "var(--app-surface-alt)", border: "1px solid var(--app-border)", color: "var(--app-text)" }}>Cancelar</button>
+              <button onClick={() => void handleExportReport()} disabled={exportingReport} className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl" style={{ background: "#5B88B2", border: 0, color: "#fff", fontWeight: 700, opacity: exportingReport ? .65 : 1 }}>{exportingReport ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}Generar PDF</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto">
         <h1
           style={{
@@ -917,11 +994,9 @@ export function Profile({
             fontWeight: 600,
             fontSize: "calc(14px * var(--app-font-scale))",
           }}
-          onClick={() =>
-            toast.info("La exportación PDF estará disponible pronto")
-          }
+          onClick={() => setShowReportOptions(true)}
         >
-          <Download size={16} /> Exportar reporte PDF semanal
+          <Download size={16} /> Exportar reporte PDF
         </button>
       </div>
     </div>
