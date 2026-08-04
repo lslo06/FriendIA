@@ -125,7 +125,7 @@ export function AppSettings({ userId, onLogout, onAccountDeleted }: AppSettingsP
   const deletingAccount = confirmAction === "account";
 
   return (
-    <div className="relative flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
+    <div className="relative flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style={{ background: "var(--app-bg)" }}>
       {confirmAction && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"

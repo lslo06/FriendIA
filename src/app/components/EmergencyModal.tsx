@@ -14,7 +14,7 @@ export function EmergencyModal({ onClose, onGoToHelp }: EmergencyModalProps) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-md p-8 rounded-2xl"
+        className="w-full max-w-md p-5 sm:p-8 rounded-2xl max-h-[90vh] overflow-y-auto"
         style={{ background: "var(--app-surface)", border: "1px solid rgba(91,136,178,0.3)", boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}
       >
         <button onClick={onClose} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--app-text-muted)" }}>

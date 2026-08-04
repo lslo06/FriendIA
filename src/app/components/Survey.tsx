@@ -696,7 +696,7 @@ export function Survey({
         </div>
 
         <div
-          className="p-8 rounded-2xl"
+          className="p-4 sm:p-8 rounded-2xl"
           style={{
             background: "#1A2332",
             border:

@@ -197,7 +197,7 @@ export default function App() {
         onNavigate={tab => setActiveTab(tab)}
         onLogout={() => setShowLogoutConfirm(true)}
       />
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeTab}

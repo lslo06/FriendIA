@@ -150,7 +150,7 @@ export function Diary({ userId }: DiaryProps) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style={{ background: "var(--app-bg)" }}>
       {selectedEntry && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -303,7 +303,7 @@ export function Diary({ userId }: DiaryProps) {
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <h1 style={{ fontSize: "calc(24px * var(--app-font-scale))", fontWeight: 700, color: "var(--app-text)" }}>Mi Diario Emocional</h1>
         <button
           onClick={() => setShowNew(v => !v)}

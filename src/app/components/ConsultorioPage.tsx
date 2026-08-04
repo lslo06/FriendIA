@@ -44,7 +44,7 @@ export function ConsultorioPage({ onBack, onLogin, onSignup }: ConsultorioPagePr
         </div>
       </nav>
 
-      <div className="max-w-4xl mx-auto px-8 py-14">
+      <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-14">
         <button
           onClick={onBack}
           className="flex items-center gap-2 mb-8 transition-all"
@@ -63,7 +63,7 @@ export function ConsultorioPage({ onBack, onLogin, onSignup }: ConsultorioPagePr
             border: "1px solid rgba(91,136,178,0.2)"
           }}
         >
-          <div className="flex items-start gap-8">
+          <div className="flex flex-col sm:flex-row items-start gap-5 sm:gap-8">
             {/* Avatar */}
             <div
               className="w-24 h-24 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -90,7 +90,7 @@ export function ConsultorioPage({ onBack, onLogin, onSignup }: ConsultorioPagePr
 
         {/* Contact info */}
         <div
-          className="grid grid-cols-3 gap-4 mb-10"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"
         >
           {[
             {
@@ -153,7 +153,7 @@ export function ConsultorioPage({ onBack, onLogin, onSignup }: ConsultorioPagePr
             FriendIA no reemplaza la psicoterapia — la complementa. Los pacientes pueden registrar sus emociones, escribir en su diario y conversar con la guía de IA entre sesiones, lo que permite un seguimiento más continuo y enriquece cada consulta presencial.
           </p>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {services.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
@@ -172,7 +172,7 @@ export function ConsultorioPage({ onBack, onLogin, onSignup }: ConsultorioPagePr
 
         {/* CTA agendar */}
         <div
-          className="rounded-2xl p-8 flex items-center justify-between gap-6"
+          className="rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6"
           style={{ background: "rgba(91,136,178,0.08)", border: "1px solid rgba(91,136,178,0.25)" }}
         >
           <div>

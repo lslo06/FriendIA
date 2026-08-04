@@ -345,7 +345,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
   return (
     <div className="relative flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
+      <div className="flex items-center justify-between gap-2 px-3 sm:px-6 py-3 sm:py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "rgba(91,136,178,0.2)" }}>
             <img src={logoImg} alt="bot" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} />
@@ -431,7 +431,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
 
       {(checkInLoading || !currentEmotion) && (
         <div
-          className="absolute inset-x-0 bottom-0 z-30 flex items-center justify-center p-6 overflow-y-auto"
+          className="absolute inset-x-0 bottom-0 z-30 flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto"
           style={{ top: 73, background: "var(--app-bg)" }}
         >
           {checkInLoading ? (
@@ -440,7 +440,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
               Cargando tu check-in de hoy…
             </div>
           ) : (
-            <div className="w-full max-w-2xl p-6 rounded-3xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
+            <div className="w-full max-w-2xl p-4 sm:p-6 rounded-2xl sm:rounded-3xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "rgba(91,136,178,0.16)" }}>
                   <HeartPulse size={20} color="#78A6D1" />
@@ -460,14 +460,14 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
                       setCheckInPrimary(option.core);
                       setCheckInNuance("");
                     }}
-                    className="flex items-center gap-2 p-3 rounded-xl text-left"
+                    className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-xl text-center sm:text-left"
                     style={{
                       background: checkInPrimary === option.core ? `${option.color}1F` : "var(--app-surface-alt)",
                       border: `1px solid ${checkInPrimary === option.core ? option.color : "var(--app-border)"}`,
                       color: "var(--app-text)",
                     }}
                   >
-                    <img src={getEmotionIcon(option.core) ?? ""} alt="" className="h-16 w-16 object-contain" style={{ imageRendering: "pixelated" }} />
+                    <img src={getEmotionIcon(option.core) ?? ""} alt="" className="h-12 w-12 sm:h-16 sm:w-16 object-contain" style={{ imageRendering: "pixelated" }} />
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{option.core}</span>
                   </button>
                 ))}
@@ -517,7 +517,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
 
       {/* Overuse warning banner */}
       {showOveruseWarning && (
-        <div className="mx-6 mt-4 p-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.3)" }}>
+        <div className="mx-3 sm:mx-6 mt-3 sm:mt-4 p-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.3)" }}>
           <Clock size={15} color="#F5A623" style={{ flexShrink: 0, marginTop: 1 }} />
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text)", fontWeight: 600, marginBottom: 2 }}>Llevas {sessionMin} minutos aquí</p>
@@ -530,7 +530,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-5 flex flex-col gap-4">
         <AnimatePresence initial={false}>
         {messages.map(msg => {
           if (msg.from === "system") return null;
@@ -544,7 +544,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div style={{ maxWidth: "70%" }}>
+              <div className="max-w-[88%] sm:max-w-[70%]">
                 <div
                   className="px-4 py-3 rounded-2xl"
                   style={{
@@ -674,14 +674,14 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
       </div>
 
       {/* Emergency card */}
-      <div className="mx-6 mb-3 p-3 rounded-xl flex items-center gap-3" style={{ background: "rgba(226,75,74,0.06)", border: "1px solid rgba(226,75,74,0.2)" }}>
+      <div className="mx-3 sm:mx-6 mb-3 p-3 rounded-xl flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3" style={{ background: "rgba(226,75,74,0.06)", border: "1px solid rgba(226,75,74,0.2)" }}>
         <AlertTriangle size={14} color="#E24B4A" />
         <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", flex: 1 }}>Si estás en crisis, contacta ayuda profesional.</p>
         <button onClick={onEmergency} style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "#E24B4A", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Ver opciones</button>
       </div>
 
       {/* Input */}
-      <div className="px-6 pb-5">
+      <div className="px-3 sm:px-6 pb-3 sm:pb-5">
         <div className="flex items-center gap-3 p-2 pl-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
           <input
             ref={inputRef}

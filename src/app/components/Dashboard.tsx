@@ -132,13 +132,13 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-8" style={{ background: "var(--app-bg)" }}>
+    <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" style={{ background: "var(--app-bg)" }}>
       <div className="mb-8">
         <h1 style={{ fontSize: "calc(26px * var(--app-font-scale))", fontWeight: 700, color: "var(--app-text)" }}>Hola, {userName} </h1>
         <p style={{ fontSize: "calc(14px * var(--app-font-scale))", color: "var(--app-text-muted)", marginTop: 4, textTransform: "capitalize" }}>{today}</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "18px 20px", border: "1px solid var(--app-border)" }}>
           <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 6 }}>Días activos</p>
           <p style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#5B88B2" }}>{stats.activeDays}</p>
@@ -162,7 +162,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
         <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "20px 22px", border: "1px solid var(--app-border)" }}>
           <div className="flex items-center justify-between mb-3">
             <p style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", fontWeight: 500 }}>Check-in emocional de hoy</p>
@@ -190,7 +190,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
           {!selectedCore ? (
             <>
               <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 12, lineHeight: 1.5 }}>¿Cuál de estas emociones se acerca más a cómo te sientes?</p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {emotionWheel.map(({ core, color }) => (
                   <button
                     key={core}
@@ -311,7 +311,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
             <div className="w-full my-6" style={{ height: 1, background: "var(--app-border)", opacity: 0.6 }} />
 
             {/* Leyenda de emociones en formato 3x2 y más grande */}
-            <div className="grid grid-cols-3 gap-y-4 gap-x-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
               {emotionWheel.map(({ core, color }) => (
                 <div key={core} className="flex items-center gap-2">
                   <div style={{ width: 10, height: 10, borderRadius: "50%", background: color }} />
