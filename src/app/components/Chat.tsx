@@ -94,7 +94,6 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
   const [reflectionSending, setReflectionSending] = useState(false);
   const [reflectionCompleted, setReflectionCompleted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const sessionRef = useRef<ReturnType<typeof setInterval>>();
   const chatSessionIdRef = useRef<string | null>(null);
 
@@ -136,10 +135,6 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isSending]);
 
-  useEffect(() => {
-    if (!showHistory && !showGrounding) inputRef.current?.focus();
-  }, [isSending, showHistory, showGrounding]);
-
   async function openHistory() {
     setShowHistory(true);
     setIsLoadingHistory(true);
@@ -163,7 +158,6 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
     setShowReflection(false);
     setReflectionCompleted(false);
     setSessionMin(0);
-    requestAnimationFrame(() => inputRef.current?.focus());
   }
 
   async function saveCheckIn() {
@@ -176,7 +170,6 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
       });
       setCurrentEmotion(record);
       setMessages(createInitialMessages(userName, record));
-      requestAnimationFrame(() => inputRef.current?.focus());
     } catch (error) {
       const text = error instanceof Error ? error.message : "No se pudo guardar tu estado";
       setMessages(current => [...current, { id: Date.now(), from: "bot", text, time: now() }]);
@@ -239,12 +232,10 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
       })));
       chatSessionIdRef.current = session.id_sesion_chat;
       setShowHistory(false);
-      requestAnimationFrame(() => inputRef.current?.focus());
     } catch (error) {
       const text = error instanceof Error ? error.message : "No se pudo abrir la conversación";
       setMessages(current => [...current, { id: Date.now(), from: "bot", text, time: now() }]);
       setShowHistory(false);
-      requestAnimationFrame(() => inputRef.current?.focus());
     } finally {
       setIsLoadingHistory(false);
     }
@@ -344,9 +335,9 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
   );
 
   return (
-    <div className="relative flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
+    <div className="fixed inset-0 h-[100dvh] flex flex-col md:relative md:inset-auto md:h-auto md:flex-1" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
       {/* Header */}
-      <div className="flex items-center justify-between gap-2 px-3 sm:px-6 py-3 sm:py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
+      <div className="flex shrink-0 items-center justify-between gap-2 px-3 sm:px-6 py-3 sm:py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             onClick={onBack}
@@ -539,7 +530,7 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-5 flex flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 py-4 sm:py-5 flex flex-col gap-4">
         <AnimatePresence initial={false}>
         {messages.map(msg => {
           if (msg.from === "system") return null;
@@ -682,19 +673,30 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
         <div ref={bottomRef} />
       </div>
 
+      {messages.some(message => message.from === "user") && !reflectionCompleted && (
+        <div className="shrink-0 px-3 pb-2 sm:hidden">
+          <button
+            onClick={() => setShowReflection(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2"
+            style={{ color: "var(--app-text)", background: "var(--app-surface-alt)", border: "1px solid var(--app-border)", fontSize: 12, fontWeight: 600 }}
+          >
+            <HeartPulse size={15} />
+            Terminar conversación
+          </button>
+        </div>
+      )}
+
       {/* Emergency card */}
-      <div className="mx-3 sm:mx-6 mb-3 p-3 rounded-xl flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3" style={{ background: "rgba(226,75,74,0.06)", border: "1px solid rgba(226,75,74,0.2)" }}>
+      <div className="shrink-0 mx-3 sm:mx-6 mb-2 sm:mb-3 p-2.5 sm:p-3 rounded-xl flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3" style={{ background: "rgba(226,75,74,0.06)", border: "1px solid rgba(226,75,74,0.2)" }}>
         <AlertTriangle size={14} color="#E24B4A" />
         <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", flex: 1 }}>Si estás en crisis, contacta ayuda profesional.</p>
         <button onClick={onEmergency} style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "#E24B4A", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Ver opciones</button>
       </div>
 
       {/* Input */}
-      <div className="px-3 sm:px-6 pb-3 sm:pb-5">
+      <div className="shrink-0 px-3 sm:px-6 pb-[max(12px,env(safe-area-inset-bottom))] sm:pb-5">
         <div className="flex items-center gap-3 p-2 pl-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
           <input
-            ref={inputRef}
-            autoFocus
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => {

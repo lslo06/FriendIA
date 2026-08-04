@@ -158,7 +158,7 @@ export function Diary({ userId }: DiaryProps) {
           onClick={closeEntry}
         >
           <div
-            className="relative w-full max-w-3xl max-h-[calc(100dvh-88px)] sm:max-h-[88vh] flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden"
+            className={`relative w-full max-w-3xl max-h-[calc(100dvh-88px)] sm:max-h-[88vh] flex flex-col rounded-2xl sm:rounded-3xl ${showDeleteConfirm ? "overflow-visible" : "overflow-hidden"}`}
             style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)", boxShadow: "0 24px 80px rgba(0,0,0,.35)" }}
             onClick={event => event.stopPropagation()}
             role="dialog"
@@ -252,12 +252,12 @@ export function Diary({ userId }: DiaryProps) {
 
             {showDeleteConfirm && (
               <div
-                className="absolute inset-0 z-10 flex items-center justify-center p-4"
+                className="fixed inset-0 z-[70] flex items-center justify-center p-4"
                 style={{ background: "rgba(4,9,15,.78)", backdropFilter: "blur(6px)" }}
                 onClick={() => !deleting && setShowDeleteConfirm(false)}
               >
                 <div
-                  className="w-full max-w-md rounded-2xl p-6"
+                  className="w-full max-w-md max-h-[calc(100dvh-32px)] overflow-y-auto rounded-2xl p-5 sm:p-6"
                   style={{ background: "var(--app-surface)", border: "1px solid rgba(226,75,74,.35)", boxShadow: "0 18px 60px rgba(0,0,0,.4)" }}
                   onClick={event => event.stopPropagation()}
                   role="alertdialog"
