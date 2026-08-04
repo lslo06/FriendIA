@@ -205,7 +205,7 @@ export function Diary({ userId }: DiaryProps) {
                         className="p-2 rounded-xl"
                         style={{ background: editMood === emoji ? "rgba(91,136,178,0.2)" : "var(--app-surface-alt)", border: editMood === emoji ? "1px solid #5B88B2" : "1px solid transparent" }}
                       >
-                        <img src={getEmotionIcon(label) ?? ""} alt="" className="h-8 w-8 object-contain" />
+                        <img src={getEmotionIcon(label) ?? ""} alt="" className="h-12 w-12 object-contain" style={{ imageRendering: "pixelated" }} />
                       </button>
                     ))}
                   </div>
@@ -309,7 +309,7 @@ export function Diary({ userId }: DiaryProps) {
       {showNew && (
         <div className="mb-6 p-5 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid rgba(91,136,178,0.3)" }}>
           <p style={{ fontSize: "calc(14px * var(--app-font-scale))", fontWeight: 600, color: "var(--app-text)", marginBottom: 10 }}>¿Cómo estuvo tu día?</p>
-          <div className="flex gap-2 mb-3">
+          <div className="flex flex-wrap gap-2 mb-3">
             {MOOD_OPTIONS.map(({ emoji, label }) => (
               <button
                 key={emoji}
@@ -319,7 +319,7 @@ export function Diary({ userId }: DiaryProps) {
                 onClick={() => setNewMood(emoji)}
                 className="text-xl p-2 rounded-xl transition-all"
                 style={{ background: newMood === emoji ? "rgba(91,136,178,0.2)" : "var(--app-surface-alt)", border: newMood === emoji ? "1px solid #5B88B2" : "1px solid transparent" }}
-              ><img src={getEmotionIcon(label) ?? ""} alt="" className="h-8 w-8 object-contain" /></button>
+              ><img src={getEmotionIcon(label) ?? ""} alt="" className="h-12 w-12 object-contain" style={{ imageRendering: "pixelated" }} /></button>
             ))}
           </div>
           <textarea
@@ -388,7 +388,7 @@ export function Diary({ userId }: DiaryProps) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="flex items-center gap-2 mb-1">
                     {(getEmotionIcon(entry.tag) ?? getEmotionIcon(entry.mood)) && (
-                      <img src={(getEmotionIcon(entry.tag) ?? getEmotionIcon(entry.mood))!} alt="" className="h-6 w-6 object-contain" />
+                      <img src={(getEmotionIcon(entry.tag) ?? getEmotionIcon(entry.mood))!} alt="" className="h-8 w-8 object-contain" style={{ imageRendering: "pixelated" }} />
                     )}
                     <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)" }}>{formatEntryDate(entry.created_at)}</span>
                     {entry.tag && (

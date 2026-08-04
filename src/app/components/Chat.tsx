@@ -467,7 +467,7 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
                       color: "var(--app-text)",
                     }}
                   >
-                    <img src={getEmotionIcon(option.core) ?? ""} alt="" className="h-9 w-9 object-contain" />
+                    <img src={getEmotionIcon(option.core) ?? ""} alt="" className="h-16 w-16 object-contain" style={{ imageRendering: "pixelated" }} />
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{option.core}</span>
                   </button>
                 ))}

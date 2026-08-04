@@ -200,7 +200,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
                     onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = color)}
                     onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = "var(--app-border)")}
                   >
-                    <img src={getEmotionIcon(core) ?? ""} alt="" className="h-10 w-10 object-contain" />
+                    <img src={getEmotionIcon(core) ?? ""} alt="" className="h-16 w-16 object-contain" style={{ imageRendering: "pixelated" }} />
                     <span style={{ fontSize: "calc(11px * var(--app-font-scale))", color, fontWeight: 600 }}>{core}</span>
                   </button>
                 ))}
@@ -212,7 +212,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
                 <button onClick={() => { setSelectedCore(null); setSelectedNuance(null); }}
                   style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>← Cambiar</button>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: `${selectedEmotion!.color}18`, border: `1px solid ${selectedEmotion!.color}40` }}>
-                  <img src={getEmotionIcon(selectedCore) ?? ""} alt="" className="h-6 w-6 object-contain" />
+                  <img src={getEmotionIcon(selectedCore) ?? ""} alt="" className="h-8 w-8 object-contain" style={{ imageRendering: "pixelated" }} />
                   <span style={{ fontSize: "calc(12px * var(--app-font-scale))", color: selectedEmotion!.color, fontWeight: 600 }}>{selectedCore}</span>
                 </div>
               </div>
