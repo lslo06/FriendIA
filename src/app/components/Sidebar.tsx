@@ -1,4 +1,5 @@
 import { Home, BookOpen, MessageCircle, LifeBuoy, User, Settings, LogOut } from "lucide-react";
+import { useState } from "react";
 import { Logo } from "./Logo";
 
 type Screen = "dashboard" | "diary" | "chat" | "help" | "profile" | "settings";
@@ -22,7 +23,7 @@ const bottomNav = [
 ];
 
 export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
-  const mobileNav = [...mainNav, ...bottomNav];
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
 
   return (
     <>
@@ -97,14 +98,31 @@ export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
       </div>
       </aside>
 
+      {mobileSettingsOpen && (
+        <>
+          <button className="fixed inset-0 z-40 md:hidden" aria-label="Cerrar menú de ajustes" onClick={() => setMobileSettingsOpen(false)} style={{ background: "rgba(4,9,15,.28)", border: 0 }} />
+          <div className="fixed bottom-[calc(68px+env(safe-area-inset-bottom))] right-3 z-50 w-56 overflow-hidden rounded-2xl p-2 md:hidden" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)", boxShadow: "0 16px 45px rgba(0,0,0,.4)" }}>
+            {bottomNav.map(({ id, label, icon: Icon }) => (
+              <button key={id} onClick={() => { onNavigate(id); setMobileSettingsOpen(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left" style={{ color: active === id ? "#5B88B2" : "var(--app-text)", background: active === id ? "rgba(91,136,178,.14)" : "transparent" }}>
+                <Icon size={18} /><span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
+              </button>
+            ))}
+            <div className="my-1" style={{ height: 1, background: "var(--app-border)" }} />
+            <button onClick={() => { setMobileSettingsOpen(false); onLogout(); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left" style={{ color: "#E24B4A", background: "transparent" }}>
+              <LogOut size={18} /><span style={{ fontSize: 13, fontWeight: 600 }}>Cerrar sesión</span>
+            </button>
+          </div>
+        </>
+      )}
+
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 md:hidden"
         style={{ background: "var(--app-surface)", borderTop: "1px solid var(--app-border)", paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Navegación principal"
       >
-        {mobileNav.map(({ id, label, icon: Icon }) => {
+        {mainNav.map(({ id, label, icon: Icon }) => {
           const isActive = active === id;
-          const shortLabel = id === "dashboard" ? "Inicio" : id === "diary" ? "Diario" : id === "chat" ? "Chat" : id === "help" ? "Ayuda" : id === "profile" ? "Perfil" : "Ajustes";
+          const shortLabel = id === "dashboard" ? "Inicio" : id === "diary" ? "Diario" : id === "chat" ? "Chat" : "Ayuda";
           return (
             <button
               key={id}
@@ -118,6 +136,9 @@ export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
             </button>
           );
         })}
+        <button onClick={() => setMobileSettingsOpen(open => !open)} className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 py-2" style={{ color: mobileSettingsOpen || active === "profile" || active === "settings" ? "#5B88B2" : "var(--app-text-muted)", background: mobileSettingsOpen || active === "profile" || active === "settings" ? "rgba(91,136,178,.12)" : "transparent" }} aria-expanded={mobileSettingsOpen} aria-label="Abrir ajustes">
+          <Settings size={19} /><span className="w-full truncate text-center" style={{ fontSize: 10, fontWeight: 600 }}>Ajustes</span>
+        </button>
       </nav>
     </>
   );

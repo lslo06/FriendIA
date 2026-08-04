@@ -1,6 +1,6 @@
 import {
   Calendar, MessageCircle, BookOpen, BarChart2, FileText, Shield,
-  ArrowRight, MapPin, Mail, Instagram, ChevronRight, Smartphone, Bell, Loader2
+  ArrowRight, MapPin, Mail, Instagram, ChevronRight, Smartphone, Bell, Loader2, Menu, X
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { joinMobileWaitlist } from "@/lib/waitlist";
@@ -125,10 +125,10 @@ function MobileAppSection() {
   }
 
   return (
-    <section className="py-20 px-10" style={{ background: "#121820", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+    <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#121820", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
       <div className="max-w-5xl mx-auto">
         <div
-          className="rounded-2xl p-10 flex items-center gap-12"
+          className="rounded-2xl p-5 sm:p-10 flex flex-col md:flex-row items-stretch md:items-center gap-8 md:gap-12"
           style={{ background: "linear-gradient(135deg, #1A2332 0%, #1E2D42 100%)", border: "1px solid rgba(91,136,178,0.18)" }}
         >
           {/* Left */}
@@ -146,7 +146,7 @@ function MobileAppSection() {
             </p>
 
             {/* Store badges — disabled/coming soon */}
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
               {/* App Store */}
               <div
                 className="flex items-center gap-3 px-4 py-3 rounded-xl"
@@ -180,7 +180,7 @@ function MobileAppSection() {
                   <Bell size={13} style={{ display: "inline", marginRight: 5, verticalAlign: "middle" }} />
                   Avísame cuando esté lista
                 </p>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="email"
                     value={email}
@@ -261,12 +261,14 @@ function MobileAppSection() {
 }
 
 export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div style={{ background: "#121820", minHeight: "100vh", color: "#E2E8F0", fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* NAV */}
       <nav
-        className="flex items-center justify-between px-10 py-4"
+        className="flex items-center justify-between px-4 sm:px-6 lg:px-10 py-3 sm:py-4"
         style={{
           position: "sticky", top: 0, zIndex: 50,
           background: "rgba(18,24,32,0.92)",
@@ -275,7 +277,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
         }}
       >
         <Logo size={34} showName />
-        <div className="flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           {[["Funcionalidades","#features"],["Cómo funciona","#how"],["Testimonios","#testimonials"]].map(([label, href]) => (
             <a key={label} href={href} style={{ color: "#94A3B8", fontSize: 14, textDecoration: "none", transition: "color 0.15s" }}
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#E2E8F0")}
@@ -283,7 +285,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
             >{label}</a>
           ))}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-3">
           <button
             onClick={onLogin}
             className="px-5 py-2 rounded-xl transition-all"
@@ -299,11 +301,20 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "#5B88B2")}
           >Agendar consulta</a>
         </div>
+        <button className="sm:hidden p-2 rounded-xl" onClick={() => setMobileMenuOpen(open => !open)} aria-label="Abrir menú" aria-expanded={mobileMenuOpen} style={{ background: "rgba(91,136,178,.12)", border: "1px solid rgba(91,136,178,.25)", color: "#78A6D1" }}>{mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}</button>
+        {mobileMenuOpen && (
+          <div className="absolute inset-x-3 top-full mt-2 rounded-2xl p-3 sm:hidden" style={{ background: "#182230", border: "1px solid rgba(91,136,178,.25)", boxShadow: "0 18px 50px rgba(0,0,0,.45)" }}>
+            {[['Funcionalidades','#features'],['Cómo funciona','#how'],['Testimonios','#testimonials']].map(([label, href]) => <a key={label} href={href} onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-4 py-3" style={{ color: "#CBD5E1", textDecoration: "none", fontSize: 14 }}>{label}</a>)}
+            <div className="my-2" style={{ height: 1, background: "rgba(255,255,255,.08)" }} />
+            <button onClick={() => { setMobileMenuOpen(false); onLogin(); }} className="w-full rounded-xl px-4 py-3 text-left" style={{ color: "#78A6D1", background: "rgba(91,136,178,.1)", border: 0, fontWeight: 700 }}>Ya soy paciente</button>
+            <a href="mailto:alexiscvlldgo@gmail.com" className="mt-2 block w-full rounded-xl px-4 py-3 text-center" style={{ color: "#fff", background: "#5B88B2", textDecoration: "none", fontWeight: 700 }}>Agendar consulta</a>
+          </div>
+        )}
       </nav>
 
       {/* HERO */}
       <section style={{ background: "linear-gradient(180deg, #0F1825 0%, #121820 100%)" }}>
-        <div className="max-w-7xl mx-auto px-10 pt-20 pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-12 sm:pt-20 pb-16 sm:pb-24 overflow-hidden">
           {/* Pill */}
           <div className="flex justify-center mb-8">
             <div
@@ -317,7 +328,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
 
           {/* Main headline */}
           <div className="text-center mb-6" style={{ maxWidth: 760, margin: "0 auto 24px" }}>
-            <h1 style={{ fontSize: 58, fontWeight: 700, lineHeight: 1.05, color: "#E2E8F0", letterSpacing: "-0.02em" }}>
+            <h1 style={{ fontSize: "clamp(2.35rem, 8vw, 58px)", fontWeight: 700, lineHeight: 1.05, color: "#E2E8F0", letterSpacing: "-0.02em", overflowWrap: "anywhere" }}>
               Tu proceso terapéutico,{" "}
               <span style={{ color: "#5B88B2" }}>acompañado todos los días</span>
             </h1>
@@ -330,7 +341,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
           </p>
 
           {/* CTAs */}
-          <div className="flex gap-4 justify-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 sm:mb-16">
             
             <a
               href="mailto:alexiscvlldgo@gmail.com"
@@ -387,7 +398,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       </section>
 
       {/* WHAT IS FRIENDIA — brief explainer */}
-      <section className="py-16 px-10" style={{ background: "#0F1825", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-10" style={{ background: "#0F1825", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
         <div className="max-w-4xl mx-auto text-center">
           <h2 style={{ fontSize: 28, fontWeight: 700, color: "#E2E8F0", marginBottom: 12 }}>
             ¿Qué es FriendIA?
@@ -418,14 +429,14 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       </section>
 
       {/* HOW IT WORKS */}
-            <section id="how" className="py-20 px-10">
+            <section id="how" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-10">
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-14">
                   <span style={{ fontSize: 12, color: "#5B88B2", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Proceso</span>
-                  <h2 style={{ fontSize: 36, fontWeight: 700, color: "#E2E8F0", marginTop: 8 }}>Cómo funciona con el consultorio</h2>
+                  <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 36px)", fontWeight: 700, color: "#E2E8F0", marginTop: 8 }}>Cómo funciona con el consultorio</h2>
                   <p style={{ fontSize: 15, color: "#94A3B8", marginTop: 10 }}>FriendIA es una extensión de tu proceso terapéutico, no un sustituto.</p>
                 </div>
-                <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {howItWorks.map(({ num, iconAsset, title, desc }, i) => (
                     <div key={num} style={{ position: "relative" }}>
                       <div
@@ -440,7 +451,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
                         <p style={{ fontSize: 13, color: "#94A3B8", lineHeight: 1.6 }}>{desc}</p>
                       </div>
                       {i < howItWorks.length - 1 && (
-                        <div style={{ position: "absolute", top: "50%", right: -16, transform: "translateY(-50%)", zIndex: 1 }}>
+                        <div className="hidden lg:block" style={{ position: "absolute", top: "50%", right: -16, transform: "translateY(-50%)", zIndex: 1 }}>
                           <ChevronRight size={24} color="#2D3F55" />
                         </div>
                       )}
@@ -452,14 +463,14 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       
 
       {/* FEATURES */}
-      <section id="features" className="py-20 px-10" style={{ background: "#0F1825" }}>
+      <section id="features" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#0F1825" }}>
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
             <span style={{ fontSize: 12, color: "#5B88B2", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>Funcionalidades</span>
-            <h2 style={{ fontSize: 36, fontWeight: 700, color: "#E2E8F0", marginTop: 8 }}>Todo lo que incluye tu acceso</h2>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 36px)", fontWeight: 700, color: "#E2E8F0", marginTop: 8 }}>Todo lo que incluye tu acceso</h2>
             <p style={{ fontSize: 15, color: "#94A3B8", marginTop: 10 }}>Diseñado con responsabilidad clínica para complementar tu proceso terapéutico.</p>
           </div>
-          <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
@@ -480,16 +491,16 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       </section>
 
       {/* TESTIMONIALS */}
-      <section id="testimonials" className="py-20 px-10">
+      <section id="testimonials" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
             <span className="inline-flex items-center gap-2" style={{ fontSize: 12, color: "#5B88B2", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600 }}>
               <img src={emotionIcons.group} alt="" className="h-8 w-8 object-contain" />
               Pacientes
             </span>
-            <h2 style={{ fontSize: 36, fontWeight: 700, color: "#E2E8F0", marginTop: 8 }}>Lo que dicen quienes la usan</h2>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 36px)", fontWeight: 700, color: "#E2E8F0", marginTop: 8 }}>Lo que dicen quienes la usan</h2>
           </div>
-          <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {testimonials.map(({ name, text, iconAsset }) => (
               <div key={name} className="p-6 rounded-2xl" style={{ background: "#1A2332", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <span style={{ display: "block", marginBottom: 14 }}>
@@ -504,9 +515,9 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       </section>
 
       {/* FINAL CTA — Contact */}
-      <section className="py-20 px-10" style={{ background: "#0F1825" }}>
+      <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-10" style={{ background: "#0F1825" }}>
         <div className="max-w-3xl mx-auto text-center">
-          <h2 style={{ fontSize: 36, fontWeight: 700, color: "#E2E8F0", marginBottom: 12 }}>
+          <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 36px)", fontWeight: 700, color: "#E2E8F0", marginBottom: 12 }}>
             ¿Listo para iniciar tu proceso?
           </h2>
           <p style={{ fontSize: 16, color: "#94A3B8", lineHeight: 1.7, marginBottom: 32 }}>
@@ -514,7 +525,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
           </p>
 
           {/* Contact cards */}
-          <div className="grid grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
             {[
               { icon: MapPin, label: "Consultorio", value: "Paseo del Calvario 200", sub: "Fracc. Las Alamedas", color: "#5B88B2", href: "https://maps.google.com/?q=Paseo+del+Calvario+200+Las+Alamedas" },
               { icon: Mail, label: "Correo", value: "alexiscvlldgo@gmail.com", sub: "Respuesta en 24 hrs", color: "#4CD964", href: "mailto:alexiscvlldgo@gmail.com" },
@@ -542,7 +553,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
             ))}
           </div>
 
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="mailto:alexiscvlldgo@gmail.com"
               className="flex items-center gap-2 px-8 py-4 rounded-xl transition-all"
@@ -571,8 +582,8 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
       <MobileAppSection />
 
       {/* FOOTER */}
-      <footer className="px-10 py-10" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <footer className="px-4 sm:px-6 lg:px-10 py-10" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-8">
           <div>
             <Logo size={26} showName />
             <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 10, maxWidth: 400, lineHeight: 1.6 }}>
@@ -580,8 +591,8 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
               FriendIA no diagnostica ni reemplaza la atención psicológica profesional.
             </p>
           </div>
-          <div className="flex flex-col items-end gap-3">
-            <div className="flex gap-6">
+          <div className="flex flex-col items-start sm:items-end gap-3">
+            <div className="flex flex-wrap gap-4 sm:gap-6">
               {["Privacidad", "Términos", "Contacto"].map(link => (
                 <a key={link} href="#" style={{ fontSize: 13, color: "#94A3B8", textDecoration: "none" }}
                   onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "#E2E8F0")}
