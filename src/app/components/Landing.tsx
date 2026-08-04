@@ -365,7 +365,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
 
           {/* Psychologist card — centered and prominent */}
           <div
-            className="max-w-2xl mx-auto p-6 rounded-2xl flex items-center gap-6"
+            className="max-w-2xl mx-auto p-5 sm:p-6 rounded-2xl flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left overflow-hidden"
             style={{ background: "#1A2332", border: "1px solid rgba(91,136,178,0.2)" }}
           >
             <div
@@ -374,20 +374,20 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
             >
               <span style={{ fontSize: 22, fontWeight: 800, color: "#5B88B2" }}>IA</span>
             </div>
-            <div style={{ flex: 1 }}>
+            <div className="min-w-0 w-full" style={{ flex: 1 }}>
               <p style={{ fontSize: 11, color: "#5B88B2", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 3 }}>Psicólogo responsable</p>
               <p style={{ fontSize: 18, fontWeight: 700, color: "#E2E8F0", marginBottom: 2 }}>Lic. Irwing Alexis Calvillo Gutiérrez</p>
               <p style={{ fontSize: 13, color: "#94A3B8" }}>Licenciado en Psicología · Paseo del Calvario 200, Fracc. Las Alamedas</p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex w-full sm:w-auto min-w-0 flex-col gap-2">
               <a href="mailto:alexiscvlldgo@gmail.com"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all"
+                className="flex min-w-0 items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg transition-all break-all"
                 style={{ background: "rgba(91,136,178,0.1)", color: "#5B88B2", fontSize: 12, fontWeight: 600, textDecoration: "none" }}
                 onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(91,136,178,0.2)")}
                 onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "rgba(91,136,178,0.1)")}
               ><Mail size={12} /> alexiscvlldgo@gmail.com</a>
               <a href="https://instagram.com/psic_alexis_calvillo" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all"
+                className="flex min-w-0 items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg transition-all break-all"
                 style={{ background: "rgba(244,114,182,0.08)", color: "#F472B6", fontSize: 12, fontWeight: 600, textDecoration: "none" }}
                 onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(244,114,182,0.16)")}
                 onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "rgba(244,114,182,0.08)")}

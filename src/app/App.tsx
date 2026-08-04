@@ -115,6 +115,7 @@ export default function App() {
             userId={user.id}
             userName={userName}
             onEmergency={() => setShowEmergency(true)}
+            onBack={() => setActiveTab("dashboard")}
           />
         );
       case "diary":
@@ -196,8 +197,9 @@ export default function App() {
         active={activeTab}
         onNavigate={tab => setActiveTab(tab)}
         onLogout={() => setShowLogoutConfirm(true)}
+        hideMobile={activeTab === "chat"}
       />
-      <main className="flex-1 flex flex-col overflow-hidden pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
+      <main className={`flex-1 flex flex-col overflow-hidden ${activeTab === "chat" ? "pb-0" : "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0"}`}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeTab}

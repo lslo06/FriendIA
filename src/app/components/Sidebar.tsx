@@ -1,5 +1,5 @@
 import { Home, BookOpen, MessageCircle, LifeBuoy, User, Settings, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 
 type Screen = "dashboard" | "diary" | "chat" | "help" | "profile" | "settings";
@@ -8,6 +8,7 @@ interface SidebarProps {
   active: Screen;
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
+  hideMobile?: boolean;
 }
 
 const mainNav = [
@@ -22,8 +23,17 @@ const bottomNav = [
   { id: "settings" as Screen, label: "Configuración", icon: Settings },
 ];
 
-export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
+export function Sidebar({ active, onNavigate, onLogout, hideMobile = false }: SidebarProps) {
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileSettingsOpen(false);
+  }, [active]);
+
+  function navigateMobile(screen: Screen) {
+    setMobileSettingsOpen(false);
+    onNavigate(screen);
+  }
 
   return (
     <>
@@ -98,12 +108,12 @@ export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
       </div>
       </aside>
 
-      {mobileSettingsOpen && (
+      {mobileSettingsOpen && !hideMobile && (
         <>
           <button className="fixed inset-0 z-40 md:hidden" aria-label="Cerrar menú de ajustes" onClick={() => setMobileSettingsOpen(false)} style={{ background: "rgba(4,9,15,.28)", border: 0 }} />
           <div className="fixed bottom-[calc(68px+env(safe-area-inset-bottom))] right-3 z-50 w-56 overflow-hidden rounded-2xl p-2 md:hidden" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)", boxShadow: "0 16px 45px rgba(0,0,0,.4)" }}>
             {bottomNav.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => { onNavigate(id); setMobileSettingsOpen(false); }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left" style={{ color: active === id ? "#5B88B2" : "var(--app-text)", background: active === id ? "rgba(91,136,178,.14)" : "transparent" }}>
+              <button key={id} onClick={() => navigateMobile(id)} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left" style={{ color: active === id ? "#5B88B2" : "var(--app-text)", background: active === id ? "rgba(91,136,178,.14)" : "transparent" }}>
                 <Icon size={18} /><span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
               </button>
             ))}
@@ -116,7 +126,7 @@ export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
       )}
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 md:hidden"
+        className={`${hideMobile ? "hidden" : "grid"} fixed inset-x-0 bottom-0 z-50 grid-cols-5 md:hidden`}
         style={{ background: "var(--app-surface)", borderTop: "1px solid var(--app-border)", paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Navegación principal"
       >
@@ -126,7 +136,7 @@ export function Sidebar({ active, onNavigate, onLogout }: SidebarProps) {
           return (
             <button
               key={id}
-              onClick={() => onNavigate(id)}
+              onClick={() => navigateMobile(id)}
               className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 py-2"
               style={{ color: isActive ? "#5B88B2" : "var(--app-text-muted)", background: isActive ? "rgba(91,136,178,.12)" : "transparent" }}
               aria-label={label}

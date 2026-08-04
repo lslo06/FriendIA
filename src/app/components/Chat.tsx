@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, AlertTriangle, Clock, Wind, Anchor, Loader2, History, Plus, X, HeartPulse, CircleCheck } from "lucide-react";
+import { Send, AlertTriangle, Clock, Wind, Anchor, Loader2, History, Plus, X, HeartPulse, CircleCheck, ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import logoImg from "@/assets/logo.png";
 import { getChatMessages, listChatSessions, requestChatReply, type ChatApiMessage, type ChatSession } from "@/lib/chat";
@@ -24,6 +24,7 @@ interface ChatProps {
   userId: string;
   userName: string;
   onEmergency: () => void;
+  onBack: () => void;
 }
 
 function now() {
@@ -70,7 +71,7 @@ function createInitialMessages(userName: string, emotion?: EmotionRecord | null)
 const SESSION_WARN_MIN = 30;
 const SESSION_REFLECTION_MIN = 10;
 
-export function Chat({ userId, userName, onEmergency }: ChatProps) {
+export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
   const reduceMotion = useReducedMotion();
   const [messages, setMessages] = useState<Message[]>(() => createInitialMessages(userName));
   const [input, setInput] = useState("");
@@ -346,11 +347,19 @@ export function Chat({ userId, userName, onEmergency }: ChatProps) {
     <div className="relative flex-1 flex flex-col" style={{ background: "var(--app-bg)", overflow: "hidden" }}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-3 sm:px-6 py-3 sm:py-4" style={{ borderBottom: "1px solid var(--app-border)", background: "var(--app-surface)" }}>
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <button
+            onClick={onBack}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl md:hidden"
+            style={{ color: "var(--app-text)", background: "var(--app-surface-alt)", border: "1px solid var(--app-border)" }}
+            aria-label="Volver al inicio"
+          >
+            <ArrowLeft size={20} />
+          </button>
           <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center" style={{ background: "rgba(91,136,178,0.2)" }}>
             <img src={logoImg} alt="bot" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} />
           </div>
-          <div>
+          <div className="min-w-0">
             <p style={{ fontSize: "calc(15px * var(--app-font-scale))", fontWeight: 600, color: "var(--app-text)" }}>Tu Guía Emocional</p>
             <div className="flex items-center gap-1.5">
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#4CD964" }} />
