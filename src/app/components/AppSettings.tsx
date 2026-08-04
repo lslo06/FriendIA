@@ -13,9 +13,10 @@ import {
 interface AppSettingsProps {
   userId: string;
   onLogout: () => void;
+  onAccountDeleted: () => void;
 }
 
-export function AppSettings({ userId, onLogout }: AppSettingsProps) {
+export function AppSettings({ userId, onLogout, onAccountDeleted }: AppSettingsProps) {
   const { settings, updateSettings } = useAuth();
   const [saving, setSaving] = useState(false);
   const [confirmAction, setConfirmAction] = useState<"history" | "account" | null>(null);
@@ -113,7 +114,7 @@ export function AppSettings({ userId, onLogout }: AppSettingsProps) {
     try {
       await deleteAccount();
       toast.success("Cuenta eliminada");
-      onLogout();
+      onAccountDeleted();
     } catch (error) {
       console.error("Error eliminando la cuenta:", error);
       toast.error("No se pudo eliminar la cuenta");

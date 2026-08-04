@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, LogOut } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +36,8 @@ export default function App() {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [activeTab, setActiveTab] = useState<AppTab>("dashboard");
   const [showEmergency, setShowEmergency] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const userName = getDisplayName(profile, user?.email);
 
@@ -80,6 +82,20 @@ export default function App() {
     setActiveTab("dashboard");
   }
 
+  async function confirmLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await handleLogout();
+      setShowLogoutConfirm(false);
+    } catch (error) {
+      console.error("Error cerrando sesión:", error);
+      toast.error("No se pudo cerrar la sesión");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
   function renderTab() {
     if (!user) return null;
 
@@ -119,7 +135,8 @@ export default function App() {
         return (
           <AppSettings
             userId={user.id}
-            onLogout={handleLogout}
+            onLogout={() => setShowLogoutConfirm(true)}
+            onAccountDeleted={handleLogout}
           />
         );
     }
@@ -178,7 +195,7 @@ export default function App() {
       <Sidebar
         active={activeTab}
         onNavigate={tab => setActiveTab(tab)}
-        onLogout={handleLogout}
+        onLogout={() => setShowLogoutConfirm(true)}
       />
       <main className="flex-1 flex flex-col overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
@@ -211,6 +228,54 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      {showLogoutConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ background: "rgba(4,9,15,.78)", backdropFilter: "blur(6px)" }}
+          onClick={() => !loggingOut && setShowLogoutConfirm(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl p-6"
+            style={{ background: "var(--app-surface)", border: "1px solid rgba(226,75,74,.35)", boxShadow: "0 18px 60px rgba(0,0,0,.4)" }}
+            onClick={event => event.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="logout-confirm-title"
+            aria-describedby="logout-confirm-description"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl" style={{ background: "rgba(226,75,74,.12)", color: "#E24B4A" }}>
+                <AlertTriangle size={22} />
+              </div>
+              <div>
+                <h3 id="logout-confirm-title" style={{ color: "var(--app-text)", fontSize: 18, fontWeight: 700 }}>¿Cerrar sesión?</h3>
+                <p id="logout-confirm-description" className="mt-1" style={{ color: "var(--app-text-muted)", fontSize: 14, lineHeight: 1.55 }}>
+                  Tendrás que iniciar sesión nuevamente para volver a entrar a FriendIA.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                disabled={loggingOut}
+                className="px-4 py-2.5 rounded-xl"
+                style={{ background: "var(--app-surface-alt)", color: "var(--app-text)", border: "1px solid var(--app-border)" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => void confirmLogout()}
+                disabled={loggingOut}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                style={{ background: "#E24B4A", color: "#fff", border: 0, opacity: loggingOut ? .65 : 1, fontWeight: 700 }}
+              >
+                {loggingOut ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
+                Sí, cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

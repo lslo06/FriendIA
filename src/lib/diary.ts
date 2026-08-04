@@ -108,6 +108,7 @@ export async function createDiaryEntry(
   userId: string,
   entry: { text: string; mood?: string; tag?: string }
 ): Promise<DiaryEntry> {
+  if (!entry.mood && !entry.tag) throw new Error("Selecciona una emoción");
   const profileId = await getProfileId(userId);
   if (!profileId) throw new Error("Perfil no encontrado");
 
@@ -139,6 +140,7 @@ export async function updateDiaryEntry(
   entryId: string,
   entry: { text: string; mood?: string; tag?: string }
 ): Promise<DiaryEntry> {
+  if (!entry.mood && !entry.tag) throw new Error("Selecciona una emoción");
   const profileId = await getProfileId(userId);
   if (!profileId) throw new Error("Perfil no encontrado");
 

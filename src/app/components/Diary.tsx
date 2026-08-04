@@ -57,6 +57,10 @@ export function Diary({ userId }: DiaryProps) {
   }, [userId]);
 
   async function handleSave() {
+    if (!newMood) {
+      toast.error("Selecciona una emoción antes de guardar la entrada");
+      return;
+    }
     if (!newText.trim()) return;
     setSaving(true);
     try {
@@ -93,6 +97,10 @@ export function Diary({ userId }: DiaryProps) {
   }
 
   async function handleUpdate() {
+    if (!editMood) {
+      toast.error("Selecciona una emoción antes de guardar los cambios");
+      return;
+    }
     if (!selectedEntry || !editText.trim() || savingEdit) return;
     setSavingEdit(true);
     try {
@@ -232,9 +240,9 @@ export function Diary({ userId }: DiaryProps) {
                 </button>
                 <button
                   onClick={() => void handleUpdate()}
-                  disabled={savingEdit || !editText.trim()}
+                  disabled={savingEdit || !editText.trim() || !editMood}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl"
-                  style={{ background: "#5B88B2", color: "#fff", border: 0, opacity: savingEdit || !editText.trim() ? .55 : 1, fontWeight: 700 }}
+                  style={{ background: "#5B88B2", color: "#fff", border: 0, opacity: savingEdit || !editText.trim() || !editMood ? .55 : 1, fontWeight: 700 }}
                 >
                   {savingEdit ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
                   Guardar cambios
@@ -322,6 +330,11 @@ export function Diary({ userId }: DiaryProps) {
               ><img src={getEmotionIcon(label) ?? ""} alt="" className="h-12 w-12 object-contain" style={{ imageRendering: "pixelated" }} /></button>
             ))}
           </div>
+          {!newMood && (
+            <p style={{ color: "#F5A623", fontSize: "calc(12px * var(--app-font-scale))", marginBottom: 10 }}>
+              Selecciona una emoción para poder guardar tu entrada.
+            </p>
+          )}
           <textarea
             value={newText}
             onChange={e => setNewText(e.target.value)}
@@ -336,9 +349,9 @@ export function Diary({ userId }: DiaryProps) {
             <button onClick={() => setShowNew(false)} style={{ fontSize: "calc(13px * var(--app-font-scale))", color: "var(--app-text-muted)", background: "none", border: "none", cursor: "pointer" }}>Cancelar</button>
             <button
               onClick={handleSave}
-              disabled={saving || !newText.trim()}
+              disabled={saving || !newText.trim() || !newMood}
               className="px-5 py-2 rounded-xl flex items-center gap-2"
-              style={{ background: "#5B88B2", color: "#fff", fontWeight: 600, fontSize: "calc(13px * var(--app-font-scale))", opacity: saving || !newText.trim() ? 0.6 : 1 }}
+              style={{ background: "#5B88B2", color: "#fff", fontWeight: 600, fontSize: "calc(13px * var(--app-font-scale))", opacity: saving || !newText.trim() || !newMood ? 0.6 : 1 }}
             >
               {saving && <Loader2 size={14} className="animate-spin" />}
               Guardar entrada
