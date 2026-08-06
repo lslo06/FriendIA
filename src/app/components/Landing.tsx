@@ -336,7 +336,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
             style={{ border: "1px solid rgba(91,136,178,0.5)", color: "#5B88B2", fontSize: 14, background: "transparent" }}
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(91,136,178,0.08)")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-          >Ya soy paciente</button>
+          >Acceder</button>
           <a
             href="mailto:alexiscvlldgo@gmail.com"
             className="px-5 py-2 rounded-xl transition-all"
@@ -350,7 +350,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
           <div className="absolute inset-x-3 top-full mt-2 max-h-[calc(100dvh-88px)] overflow-y-auto rounded-2xl p-3 xl:hidden" style={{ background: "#182230", border: "1px solid rgba(91,136,178,.25)", boxShadow: "0 18px 50px rgba(0,0,0,.45)" }}>
             {[['Funcionalidades','#features'],['Cómo funciona','#how'],['Testimonios','#testimonials'],['Iniciar tu proceso','#start']].map(([label, href]) => <a key={label} href={href} onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-4 py-3" style={{ color: "#CBD5E1", textDecoration: "none", fontSize: 14 }}>{label}</a>)}
             <div className="my-2" style={{ height: 1, background: "rgba(255,255,255,.08)" }} />
-            <button onClick={() => { setMobileMenuOpen(false); onLogin(); }} className="w-full rounded-xl px-4 py-3 text-left" style={{ color: "#78A6D1", background: "rgba(91,136,178,.1)", border: 0, fontWeight: 700 }}>Ya soy paciente</button>
+            <button onClick={() => { setMobileMenuOpen(false); onLogin(); }} className="w-full rounded-xl px-4 py-3 text-left" style={{ color: "#78A6D1", background: "rgba(91,136,178,.1)", border: 0, fontWeight: 700 }}>Acceder</button>
             <a href="mailto:alexiscvlldgo@gmail.com" className="mt-2 block w-full rounded-xl px-4 py-3 text-center" style={{ color: "#fff", background: "#5B88B2", textDecoration: "none", fontWeight: 700 }}>Agendar consulta</a>
           </div>
         )}
@@ -403,7 +403,7 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)")}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
             >
-              Ya soy paciente →
+              Acceder →
             </button>
           </div>
 
