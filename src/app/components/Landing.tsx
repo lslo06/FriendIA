@@ -328,8 +328,6 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "#94A3B8")}
             >{label}</a>
           ))}
-          <button onClick={() => openLegal("privacy")} style={{ color: "#94A3B8", fontSize: 14, background: "none", border: 0, padding: 0 }}>Privacidad</button>
-          <button onClick={() => openLegal("terms")} style={{ color: "#94A3B8", fontSize: 14, background: "none", border: 0, padding: 0 }}>Términos</button>
         </div>
         <div className="hidden md:flex items-center gap-3">
           <button
@@ -351,8 +349,6 @@ export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
         {mobileMenuOpen && (
           <div className="absolute inset-x-3 top-full mt-2 max-h-[calc(100dvh-88px)] overflow-y-auto rounded-2xl p-3 xl:hidden" style={{ background: "#182230", border: "1px solid rgba(91,136,178,.25)", boxShadow: "0 18px 50px rgba(0,0,0,.45)" }}>
             {[['Funcionalidades','#features'],['Cómo funciona','#how'],['Testimonios','#testimonials'],['Iniciar tu proceso','#start']].map(([label, href]) => <a key={label} href={href} onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-4 py-3" style={{ color: "#CBD5E1", textDecoration: "none", fontSize: 14 }}>{label}</a>)}
-            <button onClick={() => openLegal("privacy")} className="block w-full rounded-xl px-4 py-3 text-left" style={{ color: "#CBD5E1", background: "none", border: 0, fontSize: 14 }}>Privacidad</button>
-            <button onClick={() => openLegal("terms")} className="block w-full rounded-xl px-4 py-3 text-left" style={{ color: "#CBD5E1", background: "none", border: 0, fontSize: 14 }}>Términos</button>
             <div className="my-2" style={{ height: 1, background: "rgba(255,255,255,.08)" }} />
             <button onClick={() => { setMobileMenuOpen(false); onLogin(); }} className="w-full rounded-xl px-4 py-3 text-left" style={{ color: "#78A6D1", background: "rgba(91,136,178,.1)", border: 0, fontWeight: 700 }}>Ya soy paciente</button>
             <a href="mailto:alexiscvlldgo@gmail.com" className="mt-2 block w-full rounded-xl px-4 py-3 text-center" style={{ color: "#fff", background: "#5B88B2", textDecoration: "none", fontWeight: 700 }}>Agendar consulta</a>

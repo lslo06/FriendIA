@@ -3,6 +3,7 @@ const router = express.Router();
 const supabase = require('../db');
 const { requireProfile } = require('../auth');
 const { generateReply, extractMemories } = require('../gemini');
+const { containsCrisisLanguage } = require('../crisis');
 
 const MAX_MESSAGES = 16;
 const MAX_MESSAGE_LENGTH = 4000;
@@ -11,15 +12,6 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_REQUESTS = 15;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const requestWindows = new Map();
-const crisisPatterns = [
-  /hacerme dano/i,
-  /lastimarme/i,
-  /quitarme la vida/i,
-  /suicidarme/i,
-  /no quiero seguir viviendo/i,
-  /quiero morir/i,
-];
-
 router.use(requireProfile);
 
 function normalizeMessages(input) {
@@ -52,14 +44,6 @@ function isRateLimited(userId) {
 
   current.count += 1;
   return current.count > RATE_LIMIT_REQUESTS;
-}
-
-function containsCrisisLanguage(text) {
-  const normalized = text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-  return crisisPatterns.some(pattern => pattern.test(normalized));
 }
 
 function isMissingColumn(error, columnName) {
@@ -348,7 +332,7 @@ router.post('/', async (req, res) => {
       ? await loadMemories(req.profileId)
       : [];
     const reply = isCrisis
-      ? 'Lo que estás viviendo importa. Si corres peligro o podrías hacerte daño, llama ahora a emergencias (911 en México) o pide a una persona de confianza que se quede contigo. También puedes abrir las opciones de ayuda inmediata de FriendIA.'
+      ? 'Lo que estás viviendo importa. Si tú u otra persona corren peligro, llama ahora a emergencias (911 en México) y pide a una persona de confianza que se quede contigo. También puedes abrir las opciones de ayuda inmediata de FriendIA.'
       : await generateReply({
         messages,
         profile: personalization.profile,

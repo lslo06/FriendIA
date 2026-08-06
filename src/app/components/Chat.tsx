@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, AlertTriangle, Clock, Wind, Anchor, Loader2, History, Plus, X, HeartPulse, CircleCheck, ArrowLeft } from "lucide-react";
+import { Send, LifeBuoy, Clock, Wind, Anchor, Loader2, History, Plus, X, HeartPulse, CircleCheck, ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import logoImg from "@/assets/logo.png";
 import { getChatMessages, listChatSessions, requestChatReply, type ChatApiMessage, type ChatSession } from "@/lib/chat";
@@ -11,6 +11,7 @@ import {
 } from "@/lib/emotions";
 import type { EmotionRecord } from "@/lib/types";
 import { emotionIcons, getEmotionIcon } from "@/lib/emotionIcons";
+import { containsCrisisLanguage } from "@/lib/crisis";
 
 interface Message {
   id: number;
@@ -33,7 +34,6 @@ function now() {
 
 // Keywords that suggest rumination or emotional distress loops
 const ruminationKeywords = ["no puedo dejar de pensar", "sigo pensando", "siempre igual", "nunca va a cambiar", "todo está mal", "sin sentido", "para qué", "no sirvo", "no tiene caso"];
-const crisisKeywords = ["hacerme daño", "lastimarme", "no quiero seguir", "desaparecer", "quitarme la vida", "suicidarme", "morir"];
 
 const groundingTechniques = [
   {
@@ -243,7 +243,7 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
 
   function detectAndRespond(userText: string): { isCrisis: boolean; isRumination: boolean } {
     const lower = userText.toLowerCase();
-    const isCrisis = crisisKeywords.some(k => lower.includes(k));
+    const isCrisis = containsCrisisLanguage(userText);
     const isRumination = ruminationKeywords.some(k => lower.includes(k));
     return { isCrisis, isRumination };
   }
@@ -261,13 +261,13 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
       const botMsg: Message = {
         id: Date.now() + 1,
         from: "bot",
-        text: "Lo que estás viviendo importa. Si corres peligro o podrías hacerte daño, llama ahora a emergencias (911 en México) o pide a una persona de confianza que se quede contigo. Abre las opciones de ayuda inmediata para encontrar más apoyo.",
+        text: "Lo que estás viviendo importa. Si tú u otra persona corren peligro, llama ahora a emergencias (911 en México) y pide a una persona de confianza que se quede contigo. Abre las opciones de ayuda inmediata para encontrar más apoyo.",
         time: now(),
         type: "normal",
       };
       setMessages(current => [...current, userMsg, botMsg]);
       setInput("");
-      setTimeout(() => onEmergency(), 1200);
+      onEmergency();
       return;
     }
 
@@ -686,11 +686,30 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
         </div>
       )}
 
-      {/* Emergency card */}
-      <div className="shrink-0 mx-3 sm:mx-6 mb-2 sm:mb-3 p-2.5 sm:p-3 rounded-xl flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3" style={{ background: "rgba(226,75,74,0.06)", border: "1px solid rgba(226,75,74,0.2)" }}>
-        <AlertTriangle size={14} color="#E24B4A" />
-        <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", flex: 1 }}>Si estás en crisis, contacta ayuda profesional.</p>
-        <button onClick={onEmergency} style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "#E24B4A", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>Ver opciones</button>
+      {/* Emergency help: compact by default, expanded on hover or keyboard focus. */}
+      <div className="shrink-0 mx-3 sm:mx-6 mb-2 sm:mb-3 flex justify-end">
+        <button
+          type="button"
+          onClick={onEmergency}
+          aria-label="Abrir opciones de ayuda en crisis"
+          className="group flex min-h-10 max-w-full items-center overflow-hidden rounded-xl px-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B88B2]"
+          style={{
+            background: "var(--app-surface-alt)",
+            border: "1px solid var(--app-border-medium)",
+            color: "var(--app-text-muted)",
+            cursor: "pointer",
+          }}
+        >
+          <LifeBuoy size={17} color="#5B88B2" style={{ flexShrink: 0 }} aria-hidden="true" />
+          <span className="hidden max-w-0 items-center gap-2 overflow-hidden whitespace-nowrap opacity-0 transition-[max-width,margin,opacity] duration-300 group-hover:ml-2 group-hover:max-w-[28rem] group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-[28rem] group-focus-visible:opacity-100 sm:flex">
+            <span style={{ fontSize: "calc(12px * var(--app-font-scale))" }}>
+              Si estás en crisis, contacta ayuda profesional.
+            </span>
+            <span style={{ color: "var(--app-text)", fontSize: "calc(12px * var(--app-font-scale))", fontWeight: 700 }}>
+              Ver opciones
+            </span>
+          </span>
+        </button>
       </div>
 
       {/* Input */}
