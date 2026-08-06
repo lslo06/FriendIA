@@ -171,6 +171,20 @@ export function computeDashboardStats(
   };
 }
 
+export function hasActivityToday(
+  entries: DiaryEntry[],
+  emotions: EmotionRecord[]
+): boolean {
+  const today = format(new Date(), "yyyy-MM-dd");
+
+  return (
+    emotions.some((emotion) => emotion.date === today) ||
+    entries.some(
+      (entry) => format(new Date(entry.created_at), "yyyy-MM-dd") === today
+    )
+  );
+}
+
 export function isEmotionFromToday(record: EmotionRecord): boolean {
   return record.date === format(new Date(), "yyyy-MM-dd");
 }

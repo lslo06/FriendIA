@@ -16,7 +16,7 @@ export function StreakIcon({
     <span
       className={`relative inline-flex shrink-0 ${className}`}
       role="img"
-      aria-label={active ? "Racha activa" : "Racha inactiva"}
+      aria-label={active ? "Racha encendida hoy" : "Racha pendiente de hoy"}
     >
       <AnimatePresence initial={false} mode="sync">
         <motion.img

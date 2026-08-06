@@ -19,7 +19,11 @@ import {
 } from "@/lib/profiles";
 import type { UserProfile } from "@/lib/types";
 import { fetchDiaryEntries } from "@/lib/diary";
-import { computeDashboardStats, fetchEmotionRecords } from "@/lib/emotions";
+import {
+  computeDashboardStats,
+  fetchEmotionRecords,
+  hasActivityToday,
+} from "@/lib/emotions";
 import { listChatSessions } from "@/lib/chat";
 import { StreakIcon } from "@/app/components/StreakIcon";
 import { buildFriendiaReportHtml, filterReportPeriod, writeAndPrintReport } from "@/lib/pdfReport";
@@ -113,6 +117,7 @@ export function Profile({
     totalEntries: 0,
     currentStreak: 0,
   });
+  const [isStreakLit, setIsStreakLit] = useState(false);
   const [providers, setProviders] = useState<string[]>([]);
   const [lastSignIn, setLastSignIn] = useState("");
   const [loading, setLoading] = useState(true);
@@ -162,6 +167,7 @@ export function Profile({
       const emotions =
         emotionsResult.status === "fulfilled" ? emotionsResult.value : [];
       setStats(computeDashboardStats(entries, emotions));
+      setIsStreakLit(hasActivityToday(entries, emotions));
 
       if (disabilityResult.status === "fulfilled") {
         setDisability(disabilityResult.value);
@@ -585,7 +591,7 @@ export function Profile({
               >
                 {value}
                 {label === "Racha" && (
-                  <StreakIcon active={stats.currentStreak > 0} />
+                  <StreakIcon active={isStreakLit} />
                 )}
               </div>
             </div>

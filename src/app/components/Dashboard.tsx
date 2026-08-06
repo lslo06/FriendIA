@@ -12,6 +12,7 @@ import {
   createEmotionRecord,
   EMOTION_COLORS,
   fetchEmotionRecords,
+  hasActivityToday,
   isEmotionFromToday,
 } from "@/lib/emotions";
 import type { DiaryEntry, EmotionRecord } from "@/lib/types";
@@ -95,6 +96,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
   }, [userId]);
 
   const stats = computeDashboardStats(entries, emotionRecords);
+  const isStreakLit = hasActivityToday(entries, emotionRecords);
   const weekDays = computeWeekMoods(emotionRecords);
   const recentEntries = entries.slice(0, 3);
   const todayEmotion = emotionRecords.find(isEmotionFromToday);
@@ -156,7 +158,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
             <span style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#F5A623" }}>
               {stats.currentStreak}
             </span>
-            <StreakIcon active={stats.currentStreak > 0} />
+            <StreakIcon active={isStreakLit} />
           </div>
         </div>
       </div>
