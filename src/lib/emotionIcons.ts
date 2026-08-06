@@ -13,6 +13,7 @@ import sleepingIcon from "@/assets/emoji-dormido-pixel.png";
 import lowEnergyIcon from "@/assets/emoji-baja-energia-pixel.png";
 import anchorIcon from "@/assets/generated-icons/anclaje.png";
 import streakIcon from "@/assets/generated-icons/racha.png";
+import streakInactiveIcon from "@/assets/generated-icons/racha-gris.png";
 import celebrationIcon from "@/assets/generated-icons/celebracion.png";
 
 export const emotionIcons = {
@@ -31,6 +32,7 @@ export const emotionIcons = {
   lowEnergy: lowEnergyIcon,
   anchor: anchorIcon,
   streak: streakIcon,
+  streakInactive: streakInactiveIcon,
   celebration: celebrationIcon,
 } as const;
 

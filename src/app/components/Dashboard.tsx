@@ -15,7 +15,8 @@ import {
   isEmotionFromToday,
 } from "@/lib/emotions";
 import type { DiaryEntry, EmotionRecord } from "@/lib/types";
-import { emotionIcons, getEmotionIcon } from "@/lib/emotionIcons";
+import { getEmotionIcon } from "@/lib/emotionIcons";
+import { StreakIcon } from "@/app/components/StreakIcon";
 
 interface DashboardProps {
   userId: string;
@@ -155,9 +156,7 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
             <span style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#F5A623" }}>
               {stats.currentStreak}
             </span>
-            {stats.currentStreak > 0 && (
-              <img src={emotionIcons.streak} alt="Racha activa" className="w-9 h-9 object-contain" />
-            )}
+            <StreakIcon active={stats.currentStreak > 0} />
           </div>
         </div>
       </div>

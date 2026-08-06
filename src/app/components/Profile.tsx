@@ -18,10 +18,10 @@ import {
   updateProfile,
 } from "@/lib/profiles";
 import type { UserProfile } from "@/lib/types";
-import { computeDiaryStats, fetchDiaryEntries } from "@/lib/diary";
-import { fetchEmotionRecords } from "@/lib/emotions";
+import { fetchDiaryEntries } from "@/lib/diary";
+import { computeDashboardStats, fetchEmotionRecords } from "@/lib/emotions";
 import { listChatSessions } from "@/lib/chat";
-import { emotionIcons } from "@/lib/emotionIcons";
+import { StreakIcon } from "@/app/components/StreakIcon";
 import { buildFriendiaReportHtml, filterReportPeriod, writeAndPrintReport } from "@/lib/pdfReport";
 import logoImg from "@/assets/logo.png";
 
@@ -147,18 +147,21 @@ export function Profile({
     let active = true;
 
     async function loadRelatedData() {
-      const [entriesResult, disabilityResult, authResult] =
+      const [entriesResult, emotionsResult, disabilityResult, authResult] =
         await Promise.allSettled([
           fetchDiaryEntries(userId),
+          fetchEmotionRecords(userId),
           fetchProfileDisability(),
           supabase.auth.getUser(),
         ]);
 
       if (!active) return;
 
-      if (entriesResult.status === "fulfilled") {
-        setStats(computeDiaryStats(entriesResult.value));
-      }
+      const entries =
+        entriesResult.status === "fulfilled" ? entriesResult.value : [];
+      const emotions =
+        emotionsResult.status === "fulfilled" ? emotionsResult.value : [];
+      setStats(computeDashboardStats(entries, emotions));
 
       if (disabilityResult.status === "fulfilled") {
         setDisability(disabilityResult.value);
@@ -180,6 +183,7 @@ export function Profile({
 
       if (
         entriesResult.status === "rejected" ||
+        emotionsResult.status === "rejected" ||
         disabilityResult.status === "rejected" ||
         authResult.status === "rejected"
       ) {
@@ -580,8 +584,8 @@ export function Profile({
                 }}
               >
                 {value}
-                {label === "Racha" && stats.currentStreak > 0 && (
-                  <img src={emotionIcons.streak} alt="Racha activa" className="h-9 w-9 object-contain" />
+                {label === "Racha" && (
+                  <StreakIcon active={stats.currentStreak > 0} />
                 )}
               </div>
             </div>
