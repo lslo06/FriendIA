@@ -30,6 +30,7 @@ export function EmergencyModal({ onClose, onGoToHelp }: EmergencyModalProps) {
     width: "calc(32px * var(--app-font-scale))",
     height: "calc(32px * var(--app-font-scale))",
     objectFit: "contain",
+    imageRendering: "pixelated",
   }}
 />
           </div>
