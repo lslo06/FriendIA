@@ -530,7 +530,7 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
       )}
 
       {/* Messages */}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 py-4 sm:py-5 flex flex-col gap-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 pt-4 pb-5 sm:pt-5 sm:pb-6 flex flex-col gap-4">
         <AnimatePresence initial={false}>
         {messages.map(msg => {
           if (msg.from === "system") return null;
@@ -673,78 +673,86 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
         <div ref={bottomRef} />
       </div>
 
-      {messages.some(message => message.from === "user") && !reflectionCompleted && (
-        <div className="shrink-0 px-3 pb-2 sm:hidden">
+      <footer
+        className="shrink-0 pt-2 sm:pt-3"
+        style={{
+          background: "var(--app-bg)",
+          borderTop: "1px solid var(--app-border)",
+        }}
+      >
+        {/* Emergency help: compact by default, expanded on hover or keyboard focus. */}
+        <div className="px-3 sm:px-6 flex justify-end">
           <button
-            onClick={() => setShowReflection(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2"
-            style={{ color: "var(--app-text)", background: "var(--app-surface-alt)", border: "1px solid var(--app-border)", fontSize: 12, fontWeight: 600 }}
-          >
-            <HeartPulse size={15} />
-            Terminar conversación
-          </button>
-        </div>
-      )}
-
-      {/* Emergency help: compact by default, expanded on hover or keyboard focus. */}
-      <div className="shrink-0 mx-3 sm:mx-6 mb-2 sm:mb-3 flex justify-end">
-        <button
-          type="button"
-          onClick={onEmergency}
-          aria-label="Abrir opciones de ayuda en crisis"
-          className="group flex min-h-10 max-w-full items-center overflow-hidden rounded-xl px-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B88B2]"
-          style={{
-            background: "var(--app-surface-alt)",
-            border: "1px solid var(--app-border-medium)",
-            color: "var(--app-text-muted)",
-            cursor: "pointer",
-          }}
-        >
-          <LifeBuoy size={17} color="#5B88B2" style={{ flexShrink: 0 }} aria-hidden="true" />
-          <span className="hidden max-w-0 items-center gap-2 overflow-hidden whitespace-nowrap opacity-0 transition-[max-width,margin,opacity] duration-300 group-hover:ml-2 group-hover:max-w-[28rem] group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-[28rem] group-focus-visible:opacity-100 sm:flex">
-            <span style={{ fontSize: "calc(12px * var(--app-font-scale))" }}>
-              Si estás en crisis, contacta ayuda profesional.
-            </span>
-            <span style={{ color: "var(--app-text)", fontSize: "calc(12px * var(--app-font-scale))", fontWeight: 700 }}>
-              Ver opciones
-            </span>
-          </span>
-        </button>
-      </div>
-
-      {/* Input */}
-      <div className="shrink-0 px-3 sm:px-6 pb-[max(12px,env(safe-area-inset-bottom))] sm:pb-5">
-        <div className="flex items-center gap-3 p-2 pl-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-                e.preventDefault();
-                void sendMessage();
-              }
-            }}
-            placeholder="Escribe cómo te sientes..."
-            className="flex-1 outline-none bg-transparent"
-            style={{ fontSize: "calc(14px * var(--app-font-scale))", color: "var(--app-text)" }}
-          />
-          <button
-            onClick={() => void sendMessage()}
-            disabled={isSending || !input.trim()}
-            aria-label="Enviar mensaje"
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
+            type="button"
+            onClick={onEmergency}
+            aria-label="Abrir opciones de ayuda en crisis"
+            className="group flex min-h-10 max-w-full items-center overflow-hidden rounded-xl px-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B88B2]"
             style={{
-              background: input.trim() && !isSending ? "#5B88B2" : "var(--app-muted)",
-              cursor: input.trim() && !isSending ? "pointer" : "not-allowed",
+              background: "var(--app-surface-alt)",
+              border: "1px solid var(--app-border-medium)",
+              color: "var(--app-text-muted)",
+              cursor: "pointer",
             }}
           >
-            <Send size={16} color={input.trim() && !isSending ? "#fff" : "var(--app-text-muted)"} />
+            <LifeBuoy size={17} color="#5B88B2" style={{ flexShrink: 0 }} aria-hidden="true" />
+            <span className="hidden max-w-0 items-center gap-2 overflow-hidden whitespace-nowrap opacity-0 transition-[max-width,margin,opacity] duration-300 group-hover:ml-2 group-hover:max-w-[28rem] group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-[28rem] group-focus-visible:opacity-100 sm:flex">
+              <span style={{ fontSize: "calc(12px * var(--app-font-scale))" }}>
+                Si estás en crisis, contacta ayuda profesional.
+              </span>
+              <span style={{ color: "var(--app-text)", fontSize: "calc(12px * var(--app-font-scale))", fontWeight: 700 }}>
+                Ver opciones
+              </span>
+            </span>
           </button>
         </div>
-        <p style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-muted-strong)", textAlign: "center", marginTop: 8 }}>
-          FriendIA no diagnostica ni reemplaza la atención psicológica profesional.
-        </p>
-      </div>
+
+        {messages.some(message => message.from === "user") && !reflectionCompleted && (
+          <div className="px-3 pt-2 sm:hidden">
+            <button
+              onClick={() => setShowReflection(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2"
+              style={{ color: "var(--app-text)", background: "var(--app-surface-alt)", border: "1px solid var(--app-border)", fontSize: 12, fontWeight: 600 }}
+            >
+              <HeartPulse size={15} />
+              Terminar conversación
+            </button>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="px-3 sm:px-6 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] sm:pt-3 sm:pb-5">
+          <div className="flex items-center gap-3 p-2 pl-4 rounded-2xl" style={{ background: "var(--app-surface)", border: "1px solid var(--app-border-medium)" }}>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  void sendMessage();
+                }
+              }}
+              placeholder="Escribe cómo te sientes..."
+              className="flex-1 outline-none bg-transparent"
+              style={{ fontSize: "calc(14px * var(--app-font-scale))", color: "var(--app-text)" }}
+            />
+            <button
+              onClick={() => void sendMessage()}
+              disabled={isSending || !input.trim()}
+              aria-label="Enviar mensaje"
+              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
+              style={{
+                background: input.trim() && !isSending ? "#5B88B2" : "var(--app-muted)",
+                cursor: input.trim() && !isSending ? "pointer" : "not-allowed",
+              }}
+            >
+              <Send size={16} color={input.trim() && !isSending ? "#fff" : "var(--app-text-muted)"} />
+            </button>
+          </div>
+          <p style={{ fontSize: "calc(11px * var(--app-font-scale))", color: "var(--app-muted-strong)", textAlign: "center", marginTop: 8 }}>
+            FriendIA no diagnostica ni reemplaza la atención psicológica profesional.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
