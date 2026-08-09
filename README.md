@@ -54,6 +54,7 @@ FriendIA no diagnostica ni reemplaza la atención psicológica profesional.
    - `008_chat_history_schema.sql`
    - `009_chat_memories.sql`
    - `010_mobile_waitlist.sql`
+   - `011_cycle_tracking.sql`
 
 5. Inicia toda la aplicación desde la raíz:
 

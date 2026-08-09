@@ -436,7 +436,7 @@ export function Auth({
           email: email.trim(),
           password,
           accepted_legal: true,
-          legal_version: "2026-08-04",
+          legal_version: "2026-08-09",
         }),
       });
     } catch {

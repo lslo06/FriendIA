@@ -7,6 +7,7 @@ export interface UserProfile {
   genero: string | null;
   tono_preferido: string | null;
   seguimiento_ciclo_activo: boolean;
+  consentimiento_ciclo_version: string | null;
   preocupaciones: string[];
   url_avatar: string | null;
   creado_en: string;
@@ -33,6 +34,15 @@ export interface EmotionRecord {
   emotions: string[];
   notes: string | null;
   created_at: string;
+}
+
+export interface CycleRecord {
+  id: string;
+  profileId: string;
+  startDate: string;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UserSettings {

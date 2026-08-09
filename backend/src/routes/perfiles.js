@@ -263,7 +263,7 @@ router.post("/registro", async (req, res) => {
       });
     }
 
-    if (accepted_legal !== true || legal_version !== "2026-08-04") {
+    if (accepted_legal !== true || legal_version !== "2026-08-09") {
       return res.status(400).json({
         error: "Debes aceptar los Términos y el Aviso de privacidad vigentes",
       });

@@ -19,7 +19,6 @@ function buildProfileContext(profile, disability) {
         .filter(Boolean)
         .slice(0, 10)
       : [],
-    seguimiento_de_ciclo_activado: Boolean(profile?.seguimiento_ciclo_activo),
     consideracion_de_accesibilidad: cleanText(disability, 60),
   };
 }

@@ -20,3 +20,17 @@ test('the Gemini prompt applies preferred tone and current emotion', () => {
   assert.match(instruction, /Desánimo/);
   assert.match(instruction, /como diagnóstico/i);
 });
+
+test('the Gemini prompt does not receive cycle tracking data', () => {
+  const instruction = buildSystemInstruction(
+    {
+      nombre: 'Ana',
+      genero: 'Mujer',
+      seguimiento_ciclo_activo: true,
+      preocupaciones: [],
+    },
+    null,
+  );
+
+  assert.doesNotMatch(instruction, /seguimiento_de_ciclo_activado/);
+});

@@ -673,6 +673,44 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
         <div ref={bottomRef} />
       </div>
 
+      {/* Mobile actions: floating appearance while keeping space in the layout. */}
+      <div className="pointer-events-none relative z-20 flex shrink-0 flex-col items-end gap-2 px-3 py-2 sm:hidden">
+        <button
+          type="button"
+          onClick={onEmergency}
+          aria-label="Abrir opciones de ayuda en crisis"
+          className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-xl px-3 backdrop-blur-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B88B2]"
+          style={{
+            background: "var(--app-surface-alt)",
+            border: "1px solid var(--app-border-medium)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.24)",
+            color: "var(--app-text)",
+          }}
+        >
+          <LifeBuoy size={17} color="#5B88B2" aria-hidden="true" />
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Ayuda</span>
+        </button>
+
+        {messages.some(message => message.from === "user") && !reflectionCompleted && (
+          <button
+            type="button"
+            onClick={() => setShowReflection(true)}
+            className="pointer-events-auto flex min-h-11 items-center gap-2 rounded-xl px-3 backdrop-blur-md transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B88B2]"
+            style={{
+              background: "var(--app-surface-alt)",
+              border: "1px solid var(--app-border-medium)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.24)",
+              color: "var(--app-text)",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            <HeartPulse size={15} aria-hidden="true" />
+            Terminar conversación
+          </button>
+        )}
+      </div>
+
       <footer
         className="shrink-0 pt-2 sm:pt-3"
         style={{
@@ -681,7 +719,7 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
         }}
       >
         {/* Emergency help: compact by default, expanded on hover or keyboard focus. */}
-        <div className="px-3 sm:px-6 flex justify-end">
+        <div className="hidden px-3 sm:flex sm:px-6 justify-end">
           <button
             type="button"
             onClick={onEmergency}
@@ -705,19 +743,6 @@ export function Chat({ userId, userName, onEmergency, onBack }: ChatProps) {
             </span>
           </button>
         </div>
-
-        {messages.some(message => message.from === "user") && !reflectionCompleted && (
-          <div className="px-3 pt-2 sm:hidden">
-            <button
-              onClick={() => setShowReflection(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2"
-              style={{ color: "var(--app-text)", background: "var(--app-surface-alt)", border: "1px solid var(--app-border)", fontSize: 12, fontWeight: 600 }}
-            >
-              <HeartPulse size={15} />
-              Terminar conversación
-            </button>
-          </div>
-        )}
 
         {/* Input */}
         <div className="px-3 sm:px-6 pt-2 pb-[max(12px,env(safe-area-inset-bottom))] sm:pt-3 sm:pb-5">

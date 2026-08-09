@@ -59,7 +59,7 @@ async function loadPersonalization(profileId) {
     supabase
       .schema('Group_By')
       .from('perfiles')
-      .select('nombre,genero,tono_preferido,seguimiento_ciclo_activo,preocupaciones')
+      .select('nombre,genero,tono_preferido,preocupaciones')
       .eq('id_perfil', profileId)
       .single(),
     supabase

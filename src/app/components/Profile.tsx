@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Download,
   Eye,
@@ -26,6 +26,8 @@ import {
 } from "@/lib/emotions";
 import { listChatSessions } from "@/lib/chat";
 import { StreakIcon } from "@/app/components/StreakIcon";
+import { CycleTracker } from "@/app/components/CycleTracker";
+import { CYCLE_CONSENT_VERSION } from "@/lib/cycleConsent";
 import { buildFriendiaReportHtml, filterReportPeriod, writeAndPrintReport } from "@/lib/pdfReport";
 import logoImg from "@/assets/logo.png";
 
@@ -108,6 +110,7 @@ export function Profile({
   const [tone, setTone] = useState("");
   const [concerns, setConcerns] = useState<string[]>([]);
   const [cycleTracking, setCycleTracking] = useState(false);
+  const [savingCyclePreference, setSavingCyclePreference] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarError, setAvatarError] = useState(false);
   const [emailField, setEmailField] = useState(email);
@@ -134,15 +137,32 @@ export function Profile({
   const [reportPeriod, setReportPeriod] = useState<7 | 30 | 90>(30);
   const [includeDiaryText, setIncludeDiaryText] = useState(false);
   const [exportingReport, setExportingReport] = useState(false);
+  const preserveProfileDraftRef = useRef(false);
 
   useEffect(() => {
+    if (preserveProfileDraftRef.current) {
+      preserveProfileDraftRef.current = false;
+      setCycleTracking(
+        Boolean(
+          profile?.seguimiento_ciclo_activo &&
+            profile.consentimiento_ciclo_version === CYCLE_CONSENT_VERSION
+        )
+      );
+      return;
+    }
+
     setName(profile?.nombre?.trim() || userName);
     setApellidoPat(profile?.apellido_pat?.trim() || "");
     setApellidoMat(profile?.apellido_mat?.trim() || "");
     setGender(profile?.genero || "");
     setTone(profile?.tono_preferido || "");
     setConcerns(profile?.preocupaciones ?? []);
-    setCycleTracking(profile?.seguimiento_ciclo_activo ?? false);
+    setCycleTracking(
+      Boolean(
+        profile?.seguimiento_ciclo_activo &&
+          profile.consentimiento_ciclo_version === CYCLE_CONSENT_VERSION
+      )
+    );
     setAvatarUrl(profile?.url_avatar?.trim() || "");
     setAvatarError(false);
     setEmailField(email);
@@ -237,6 +257,44 @@ export function Profile({
     );
   }
 
+  async function handleCycleTrackingChange(active: boolean) {
+    if (active && gender !== "Mujer") {
+      toast.error("Selecciona Mujer en el campo Género para activar el seguimiento");
+      return;
+    }
+
+    const previous = cycleTracking;
+    setCycleTracking(active);
+    setSavingCyclePreference(true);
+
+    try {
+      await updateProfile(userId, {
+        genero: gender || null,
+        seguimiento_ciclo_activo: active,
+        consentimiento_ciclo_version: active
+          ? CYCLE_CONSENT_VERSION
+          : null,
+      });
+      preserveProfileDraftRef.current = true;
+      await onProfileUpdate();
+      toast.success(
+        active
+          ? "Seguimiento del ciclo activado"
+          : "Seguimiento del ciclo desactivado"
+      );
+    } catch (error) {
+      preserveProfileDraftRef.current = false;
+      setCycleTracking(previous);
+      const message = friendlyAuthError(
+        error,
+        "No se pudo cambiar el seguimiento del ciclo"
+      );
+      toast.error(message);
+    } finally {
+      setSavingCyclePreference(false);
+    }
+  }
+
   async function handleExportReport() {
     const reportWindow = window.open("", "_blank");
     if (!reportWindow) {
@@ -314,6 +372,10 @@ export function Profile({
         tono_preferido: tone || null,
         seguimiento_ciclo_activo:
           gender === "Mujer" ? cycleTracking : false,
+        consentimiento_ciclo_version:
+          gender === "Mujer" && cycleTracking
+            ? CYCLE_CONSENT_VERSION
+            : null,
         preocupaciones: concerns,
         url_avatar: avatarUrl || null,
       });
@@ -781,24 +843,6 @@ export function Profile({
                   ))}
                 </select>
               </div>
-
-              {gender === "Mujer" && (
-                <label
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer"
-                  style={{
-                    ...fieldStyle,
-                    minHeight: 48,
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={cycleTracking}
-                    onChange={(event) => setCycleTracking(event.target.checked)}
-                    style={{ accentColor: "#5B88B2" }}
-                  />
-                  <span>Activar seguimiento del ciclo</span>
-                </label>
-              )}
             </div>
 
             {profileError && (
@@ -827,6 +871,16 @@ export function Profile({
             </button>
           </section>
         </form>
+
+        {profile?.id_perfil && (
+          <CycleTracker
+            profileId={profile.id_perfil}
+            active={cycleTracking}
+            canActivate={gender === "Mujer"}
+            savingPreference={savingCyclePreference}
+            onActiveChange={handleCycleTrackingChange}
+          />
+        )}
 
         <form onSubmit={handlePasswordChange}>
           <section
