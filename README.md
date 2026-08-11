@@ -49,12 +49,13 @@ FriendIA no diagnostica ni reemplaza la atención psicológica profesional.
    Nunca uses el prefijo `VITE_` para `GEMINI_API_KEY` o la service role key.
 
 4. Ejecuta las migraciones de `supabase/migrations` en orden numérico. Para el
-   chat y la lista móvil son especialmente necesarias:
+   chat, la lista móvil y la limpieza de instalaciones anteriores son
+   especialmente necesarias:
 
    - `008_chat_history_schema.sql`
    - `009_chat_memories.sql`
    - `010_mobile_waitlist.sql`
-   - `011_cycle_tracking.sql`
+   - `012_cleanup_deprecated_profile_data.sql`
 
 5. Inicia toda la aplicación desde la raíz:
 

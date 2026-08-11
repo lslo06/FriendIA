@@ -1,7 +1,6 @@
 import { supabase } from "./supabase";
 import type { UserProfile } from "./types";
 import type { SurveyData } from "@/app/components/Survey";
-import { CYCLE_CONSENT_VERSION } from "./cycleConsent";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -28,8 +27,6 @@ export interface ProfileUpdates {
   apellido_mat?: string | null;
   genero?: string | null;
   tono_preferido?: string | null;
-  seguimiento_ciclo_activo?: boolean;
-  consentimiento_ciclo_version?: string | null;
   preocupaciones?: string[];
   url_avatar?: string | null;
 }
@@ -107,7 +104,6 @@ export async function ensureProfile(
       apellido_mat: null,
       genero: null,
       tono_preferido: null,
-      seguimiento_ciclo_activo: false,
       preocupaciones: [],
       url_avatar: googleAvatar,
     })
@@ -181,7 +177,6 @@ export async function savePersonalDetails(
       ...payload,
       genero: null,
       tono_preferido: null,
-      seguimiento_ciclo_activo: false,
       preocupaciones: [],
       url_avatar: null,
     })
@@ -267,12 +262,6 @@ export async function saveSurveyProfile(
     apellido_mat: survey.apellido_mat.trim(),
     genero: survey.gender || null,
     tono_preferido: survey.tone || null,
-    seguimiento_ciclo_activo:
-      survey.gender === "Mujer" && survey.cycleTrackingEnabled === true,
-    consentimiento_ciclo_version:
-      survey.gender === "Mujer" && survey.cycleTrackingEnabled === true
-        ? CYCLE_CONSENT_VERSION
-        : null,
     preocupaciones: survey.concerns ?? [],
     actualizado_en: new Date().toISOString(),
   };
@@ -325,7 +314,6 @@ export async function updateProfile(
     "apellido_mat",
     "genero",
     "tono_preferido",
-    "consentimiento_ciclo_version",
     "url_avatar",
   ] as const) {
     if (field in updates) {
@@ -333,12 +321,6 @@ export async function updateProfile(
       normalizedUpdates[field] =
         typeof value === "string" ? value.trim() || null : value;
     }
-  }
-
-  if ("seguimiento_ciclo_activo" in updates) {
-    normalizedUpdates.seguimiento_ciclo_activo = Boolean(
-      updates.seguimiento_ciclo_activo
-    );
   }
 
   if ("preocupaciones" in updates) {

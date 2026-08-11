@@ -15,9 +15,8 @@ import { Help } from "./components/Help";
 import { Profile } from "./components/Profile";
 import { AppSettings } from "./components/AppSettings";
 import { EmergencyModal } from "./components/EmergencyModal";
-import { ConsultorioPage } from "./components/ConsultorioPage";
 
-type AppScreen = "landing" | "auth" | "survey" | "app" | "consultorio";
+type AppScreen = "landing" | "auth" | "survey" | "app";
 type AppTab = "dashboard" | "diary" | "chat" | "help" | "profile" | "settings";
 
 function isPasswordSetupFlow() {
@@ -33,7 +32,6 @@ export default function App() {
   const reduceMotion = useReducedMotion();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const [screen, setScreen] = useState<AppScreen>("landing");
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [activeTab, setActiveTab] = useState<AppTab>("dashboard");
   const [showEmergency, setShowEmergency] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -45,7 +43,6 @@ export default function App() {
     if (loading || !user) return;
 
     if (isPasswordSetupFlow()) {
-      setAuthMode("login");
       if (screen !== "auth") setScreen("auth");
       return;
     }
@@ -154,19 +151,7 @@ export default function App() {
   if (screen === "landing") {
     return (
       <Landing
-        onLogin={() => { setAuthMode("login"); setScreen("auth"); }}
-        onSignup={() => { setAuthMode("signup"); setScreen("auth"); }}
-        onConsultorio={() => setScreen("consultorio")}
-      />
-    );
-  }
-
-  if (screen === "consultorio") {
-    return (
-      <ConsultorioPage
-        onBack={() => setScreen("landing")}
-        onLogin={() => { setAuthMode("login"); setScreen("auth"); }}
-        onSignup={() => { setAuthMode("signup"); setScreen("auth"); }}
+        onLogin={() => setScreen("auth")}
       />
     );
   }
@@ -174,7 +159,7 @@ export default function App() {
   if (screen === "auth") {
     return (
       <Auth
-        initialMode={authMode}
+        initialMode="login"
         onSuccess={handleAuthSuccess}
         onBack={() => setScreen("landing")}
       />

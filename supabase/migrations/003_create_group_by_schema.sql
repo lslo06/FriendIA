@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS "Group_By".perfiles (
   apellido_mat TEXT,
   genero TEXT,
   tono_preferido TEXT,
-  seguimiento_ciclo_activo BOOLEAN DEFAULT FALSE,
   preocupaciones TEXT[] DEFAULT '{}',
   url_avatar TEXT,
   creado_en TIMESTAMPTZ DEFAULT NOW(),

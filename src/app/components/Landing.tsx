@@ -4,7 +4,6 @@ import {
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { joinMobileWaitlist } from "@/lib/waitlist";
-import controlarIcon from '../../assets/controlar.png';
 import directorioIcon from '../../assets/directorio.png';
 import graficoIcon from '../../assets/grafico-pastel-alt.png';
 import mensajesIcon from '../../assets/mensajes.png';
@@ -13,7 +12,6 @@ import aptitudMancuernasIcon from '../../assets/aptitud-con-mancuernas.png';
 import siguiendoIcon from '../../assets/siguiendo.png';
 import velaLotoYogaIcon from '../../assets/vela-de-loto-yoga.png';
 import { useState } from "react";
-import { motion } from "motion/react";
 import { emotionIcons } from "@/lib/emotionIcons";
 // Minimal SVG QR placeholder — replace innerContent with real QR when app is live
 function QRPlaceholder() {
@@ -71,8 +69,6 @@ function QRPlaceholder() {
 
 interface LandingProps {
   onLogin: () => void;
-  onSignup: () => void;
-  onConsultorio: () => void;
 }
 
 const features = [
@@ -262,8 +258,8 @@ function MobileAppSection() {
 
 const privacySections = [
   ["Responsable y alcance", "FriendIA es una herramienta de acompañamiento emocional ofrecida por el consultorio del Lic. Irwing Alexis Calvillo Gutiérrez. Este aviso explica cómo se trata la información de quienes utilizan la plataforma."],
-  ["Información que recopilamos", "Podemos almacenar datos de cuenta y perfil, respuestas del check-in emocional, entradas del diario, conversaciones con la guía de IA, preferencias y datos técnicos necesarios para iniciar sesión, proteger la cuenta y operar el servicio. Si activas voluntariamente el seguimiento del ciclo, también almacenamos las fechas de inicio y fin que registres."],
-  ["Para qué se utiliza", "La información se usa para prestar las funciones solicitadas, mostrar historiales y tendencias emocionales, generar los reportes elegidos por el usuario, mantener la seguridad, corregir errores y mejorar la experiencia. Las fechas del ciclo se usan solo para mostrar tu historial y estimaciones dentro de tu perfil; no se envían a la guía de IA ni se incluyen automáticamente en reportes. FriendIA no vende datos personales."],
+  ["Información que recopilamos", "Podemos almacenar datos de cuenta y perfil, respuestas del check-in emocional, entradas del diario, conversaciones con la guía de IA, preferencias y datos técnicos necesarios para iniciar sesión, proteger la cuenta y operar el servicio."],
+  ["Para qué se utiliza", "La información se usa para prestar las funciones solicitadas, mostrar historiales y tendencias emocionales, generar los reportes elegidos por el usuario, mantener la seguridad, corregir errores y mejorar la experiencia. FriendIA no vende datos personales."],
   ["Proveedores", "La plataforma puede usar proveedores de infraestructura, autenticación, base de datos e inteligencia artificial para procesar la información necesaria. Estos proveedores reciben únicamente lo requerido para prestar sus servicios y están sujetos a sus propias medidas y condiciones de privacidad."],
   ["Conservación y control", "Los datos se conservan mientras la cuenta permanezca activa o sean necesarios para operar el servicio y cumplir obligaciones aplicables. Desde Configuración puedes eliminar historiales o solicitar la eliminación de la cuenta. Los reportes PDF quedan bajo tu responsabilidad al descargarlos o compartirlos."],
   ["Seguridad y derechos", "Aplicamos controles razonables de acceso y seguridad, aunque ningún sistema conectado a internet puede garantizar riesgo cero. Puedes solicitar acceso, rectificación, cancelación u oposición escribiendo al correo de contacto."],
@@ -298,7 +294,7 @@ export function LegalDialog({ type, onClose }: { type: "privacy" | "terms"; onCl
   );
 }
 
-export function Landing({ onLogin, onSignup, onConsultorio }: LandingProps) {
+export function Landing({ onLogin }: LandingProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [legalDocument, setLegalDocument] = useState<"privacy" | "terms" | null>(null);
 

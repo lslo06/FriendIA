@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { Lock } from "lucide-react";
 import type { UserProfile } from "@/lib/types";
 import { Logo } from "./Logo";
 import { emotionIcons } from "@/lib/emotionIcons";
-import { CYCLE_CONSENT_VERSION } from "@/lib/cycleConsent";
 
 interface SurveyProps {
   userName: string;
@@ -18,7 +16,6 @@ export interface SurveyData {
   gender: string;
   disability: string;
   concerns: string[];
-  cycleTrackingEnabled?: boolean;
   tone: string;
 }
 
@@ -76,11 +73,6 @@ export function Survey({
     gender: initialProfile?.genero || "",
     disability: "",
     concerns: initialProfile?.preocupaciones ?? [],
-    cycleTrackingEnabled:
-      initialProfile?.seguimiento_ciclo_activo &&
-      initialProfile.consentimiento_ciclo_version === CYCLE_CONSENT_VERSION
-        ? true
-        : undefined,
     tone: initialProfile?.tono_preferido || "",
   }));
 
@@ -99,12 +91,6 @@ export function Survey({
         current.concerns.length > 0
           ? current.concerns
           : initialProfile.preocupaciones ?? [],
-      cycleTrackingEnabled:
-        current.cycleTrackingEnabled ??
-        (initialProfile.seguimiento_ciclo_activo &&
-        initialProfile.consentimiento_ciclo_version === CYCLE_CONSENT_VERSION
-          ? true
-          : undefined),
       tone: current.tone || initialProfile.tono_preferido || "",
     }));
 
@@ -114,14 +100,13 @@ export function Survey({
     }
   }, [initialProfile, userName]);
 
-  const totalSteps = data.gender === "Mujer" ? 6 : 5;
+  const totalSteps = 5;
 
   const stepLabels = [
     "Nombre",
     "Género",
     "Discapacidad",
     "Preocupaciones",
-    ...(data.gender === "Mujer" ? ["Ciclo"] : []),
     "Tono",
   ];
 
@@ -187,14 +172,7 @@ export function Survey({
   };
 
   function renderStep() {
-    const actualStep =
-      data.gender === "Mujer"
-        ? step
-        : step < 5
-          ? step
-          : step + 1;
-
-    switch (actualStep) {
+    switch (step) {
       case 1:
         return (
           <div>
@@ -490,94 +468,6 @@ export function Survey({
         );
 
       case 5:
-        return (
-          <div>
-            <h2
-              style={{
-                fontSize: 28,
-                fontWeight: 700,
-                color: "#E2E8F0",
-                marginBottom: 8,
-              }}
-            >
-              ¿Quieres llevar un registro privado de tu periodo?
-            </h2>
-
-            <p
-              style={{
-                fontSize: 14,
-                color: "#94A3B8",
-                marginBottom: 20,
-              }}
-            >
-              Podrás registrar las fechas de inicio y fin desde tu perfil. Es
-              completamente opcional.
-            </p>
-
-            <div className="flex flex-col gap-3 mb-5">
-              {[
-                { label: "Sí, quiero activarlo", value: true },
-                { label: "Ahora no", value: false },
-              ].map((option) => (
-                <button
-                  key={option.label}
-                  onClick={() =>
-                    updateData("cycleTrackingEnabled", option.value)
-                  }
-                  className="px-5 py-3 rounded-full text-left transition-all"
-                  style={{
-                    background:
-                      data.cycleTrackingEnabled === option.value
-                        ? "#5B88B2"
-                        : "#0F1825",
-                    border: `1px solid ${
-                      data.cycleTrackingEnabled === option.value
-                        ? "#5B88B2"
-                        : "rgba(255,255,255,0.1)"
-                    }`,
-                    color:
-                      data.cycleTrackingEnabled === option.value
-                        ? "#fff"
-                        : "#94A3B8",
-                    fontSize: 14,
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <div
-              className="flex items-start gap-2 px-4 py-3 rounded-xl"
-              style={{
-                background: "rgba(91,136,178,0.08)",
-                border:
-                  "1px solid rgba(91,136,178,0.2)",
-              }}
-            >
-              <Lock
-                size={14}
-                color="#5B88B2"
-                style={{
-                  marginTop: 2,
-                  flexShrink: 0,
-                }}
-              />
-
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "#94A3B8",
-                }}
-              >
-                Las fechas se guardan en tu cuenta y no se envían a la guía de
-                IA. Puedes desactivar el seguimiento cuando quieras.
-              </p>
-            </div>
-          </div>
-        );
-
-      case 6:
         return (
           <div>
             <h2

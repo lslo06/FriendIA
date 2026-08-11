@@ -9,7 +9,6 @@ CREATE TABLE Group_By.perfiles (
   apellido_mat text,
   genero text,
   tono_preferido text,
-  seguimiento_ciclo_activo boolean DEFAULT false,
   preocupaciones ARRAY,
   url_avatar text,
   creado_en timestamp with time zone DEFAULT CURRENT_TIMESTAMP,

@@ -37,7 +37,6 @@ BEGIN
     apellido_mat = NEW.apellido_mat,
     genero = NEW.genero,
     tono_preferido = NEW.tono_preferido,
-    seguimiento_ciclo_activo = NEW.seguimiento_ciclo_activo,
     preocupaciones = NEW.preocupaciones,
     url_avatar = NEW.url_avatar,
     actualizado_en = NEW.actualizado_en
