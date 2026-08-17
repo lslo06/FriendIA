@@ -3,11 +3,13 @@ import { emotionIcons } from "@/lib/emotionIcons";
 
 interface StreakIconProps {
   active: boolean;
+  unlocked?: boolean;
   className?: string;
 }
 
 export function StreakIcon({
   active,
+  unlocked = active,
   className = "h-9 w-9",
 }: StreakIconProps) {
   const reduceMotion = useReducedMotion();
@@ -16,7 +18,13 @@ export function StreakIcon({
     <span
       className={`relative inline-flex shrink-0 ${className}`}
       role="img"
-      aria-label={active ? "Racha encendida hoy" : "Racha pendiente de hoy"}
+      aria-label={
+        active
+          ? "Racha encendida hoy"
+          : unlocked
+            ? "Racha desbloqueada; actividad de hoy pendiente"
+            : "Racha aún no desbloqueada"
+      }
     >
       <AnimatePresence initial={false} mode="sync">
         <motion.img

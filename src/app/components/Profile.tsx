@@ -26,6 +26,7 @@ import {
 } from "@/lib/emotions";
 import { listChatSessions } from "@/lib/chat";
 import { StreakIcon } from "@/app/components/StreakIcon";
+import { getStreakProgress } from "@/lib/streak";
 import { buildFriendiaReportHtml, filterReportPeriod, writeAndPrintReport } from "@/lib/pdfReport";
 import logoImg from "@/assets/logo.png";
 
@@ -220,6 +221,8 @@ export function Profile({
       return "";
     }
   }, [lastSignIn]);
+
+  const streak = getStreakProgress(stats.currentStreak, isStreakLit);
 
   const fullName = [name, apellidoPat, apellidoMat]
     .map((part) => part.trim())
@@ -554,11 +557,6 @@ export function Profile({
           {[
             ["Días activos", String(stats.activeDays), "#5B88B2"],
             ["Entradas", String(stats.totalEntries), "#4CD964"],
-            [
-              "Racha",
-              String(stats.currentStreak),
-              "#F5A623",
-            ],
           ].map(([label, value, color]) => (
             <div
               key={label}
@@ -586,12 +584,51 @@ export function Profile({
                 }}
               >
                 {value}
-                {label === "Racha" && (
-                  <StreakIcon active={isStreakLit} />
-                )}
               </div>
             </div>
           ))}
+          <div
+            className="p-4 rounded-2xl"
+            style={{
+              background: streak.activeToday
+                ? "linear-gradient(135deg, var(--app-surface), rgba(245,166,35,.08))"
+                : "var(--app-surface)",
+              border: `1px solid ${
+                streak.activeToday ? "rgba(245,166,35,.25)" : "var(--app-border)"
+              }`,
+            }}
+          >
+            <p
+              style={{
+                fontSize: "calc(12px * var(--app-font-scale))",
+                color: "var(--app-text-muted)",
+                marginBottom: 4,
+              }}
+            >
+              {streak.label}
+            </p>
+            <div
+              className="flex items-center gap-2"
+              style={{
+                fontSize: "calc(24px * var(--app-font-scale))",
+                fontWeight: 700,
+                color: streak.unlocked ? "#F5A623" : "var(--app-text-muted)",
+              }}
+            >
+              {streak.displayValue}
+              <StreakIcon active={streak.activeToday} unlocked={streak.unlocked} />
+            </div>
+            <p
+              style={{
+                color: streak.activeToday ? "#F5A623" : "var(--app-text-muted)",
+                fontSize: "calc(11px * var(--app-font-scale))",
+                lineHeight: 1.4,
+                marginTop: 5,
+              }}
+            >
+              {streak.message}
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSave}>

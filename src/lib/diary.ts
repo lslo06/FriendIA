@@ -1,7 +1,8 @@
-import { format, isToday, isYesterday, startOfDay, subDays } from "date-fns";
+import { format, isToday, isYesterday, subDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "./supabase";
 import { getProfileId } from "./profiles";
+import { computeCurrentStreak } from "./streak";
 import type { DiaryEntry, DiaryStats } from "./types";
 
 export const MOOD_TAGS: Record<string, string> = {
@@ -206,24 +207,9 @@ export function computeDiaryStats(entries: DiaryEntry[]): DiaryStats {
     entries.map(entry => format(new Date(entry.created_at), "yyyy-MM-dd"))
   );
 
-  let streak = 0;
-  let day = startOfDay(new Date());
-  while (daySet.has(format(day, "yyyy-MM-dd"))) {
-    streak++;
-    day = subDays(day, 1);
-  }
-
-  if (streak === 0) {
-    day = subDays(startOfDay(new Date()), 1);
-    while (daySet.has(format(day, "yyyy-MM-dd"))) {
-      streak++;
-      day = subDays(day, 1);
-    }
-  }
-
   return {
     activeDays: daySet.size,
     totalEntries: entries.length,
-    currentStreak: streak,
+    currentStreak: computeCurrentStreak(daySet),
   };
 }

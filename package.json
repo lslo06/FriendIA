@@ -8,8 +8,9 @@
     "dev": "node scripts/dev.cjs",
     "dev:frontend": "vite",
     "dev:backend": "npm --prefix backend run dev",
+    "test": "node --test test/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run build && npm --prefix backend test"
+    "check": "npm run typecheck && npm test && npm run build && npm --prefix backend test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",

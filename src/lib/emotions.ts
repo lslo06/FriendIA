@@ -1,6 +1,7 @@
 import { format, startOfDay, subDays } from "date-fns";
 import { supabase } from "./supabase";
 import { getProfileId } from "./profiles";
+import { computeCurrentStreak } from "./streak";
 import type {
   DiaryEntry,
   DiaryStats,
@@ -148,26 +149,10 @@ export function computeDashboardStats(
     activityDays.add(emotion.date);
   }
 
-  let currentStreak = 0;
-  let day = startOfDay(new Date());
-
-  while (activityDays.has(format(day, "yyyy-MM-dd"))) {
-    currentStreak += 1;
-    day = subDays(day, 1);
-  }
-
-  if (currentStreak === 0) {
-    day = subDays(startOfDay(new Date()), 1);
-    while (activityDays.has(format(day, "yyyy-MM-dd"))) {
-      currentStreak += 1;
-      day = subDays(day, 1);
-    }
-  }
-
   return {
     activeDays: activityDays.size,
     totalEntries: entries.length,
-    currentStreak,
+    currentStreak: computeCurrentStreak(activityDays),
   };
 }
 

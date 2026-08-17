@@ -18,6 +18,7 @@ import {
 import type { DiaryEntry, EmotionRecord } from "@/lib/types";
 import { getEmotionIcon } from "@/lib/emotionIcons";
 import { StreakIcon } from "@/app/components/StreakIcon";
+import { getStreakProgress } from "@/lib/streak";
 
 interface DashboardProps {
   userId: string;
@@ -96,7 +97,10 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
   }, [userId]);
 
   const stats = computeDashboardStats(entries, emotionRecords);
-  const isStreakLit = hasActivityToday(entries, emotionRecords);
+  const streak = getStreakProgress(
+    stats.currentStreak,
+    hasActivityToday(entries, emotionRecords)
+  );
   const weekDays = computeWeekMoods(emotionRecords);
   const recentEntries = entries.slice(0, 3);
   const todayEmotion = emotionRecords.find(isEmotionFromToday);
@@ -151,15 +155,41 @@ export function Dashboard({ userId, userName, onOpenChat, onOpenDiary }: Dashboa
           <p style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#4CD964" }}>{stats.totalEntries}</p>
         </div>
 
-        {/* Tarjeta de Racha actual con el asset de fuego */}
-        <div style={{ background: "var(--app-surface)", borderRadius: 16, padding: "18px 20px", border: "1px solid var(--app-border)" }}>
-          <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 6 }}>Racha actual</p>
+        <div
+          style={{
+            background: streak.activeToday
+              ? "linear-gradient(135deg, var(--app-surface), rgba(245,166,35,.08))"
+              : "var(--app-surface)",
+            borderRadius: 16,
+            padding: "18px 20px",
+            border: `1px solid ${
+              streak.activeToday ? "rgba(245,166,35,.25)" : "var(--app-border)"
+            }`,
+          }}
+        >
+          <p style={{ fontSize: "calc(12px * var(--app-font-scale))", color: "var(--app-text-muted)", marginBottom: 6 }}>{streak.label}</p>
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: "calc(28px * var(--app-font-scale))", fontWeight: 700, color: "#F5A623" }}>
-              {stats.currentStreak}
+            <span
+              style={{
+                fontSize: "calc(28px * var(--app-font-scale))",
+                fontWeight: 700,
+                color: streak.unlocked ? "#F5A623" : "var(--app-text-muted)",
+              }}
+            >
+              {streak.displayValue}
             </span>
-            <StreakIcon active={isStreakLit} />
+            <StreakIcon active={streak.activeToday} unlocked={streak.unlocked} />
           </div>
+          <p
+            style={{
+              color: streak.activeToday ? "#F5A623" : "var(--app-text-muted)",
+              fontSize: "calc(11px * var(--app-font-scale))",
+              lineHeight: 1.4,
+              marginTop: 5,
+            }}
+          >
+            {streak.message}
+          </p>
         </div>
       </div>
 
